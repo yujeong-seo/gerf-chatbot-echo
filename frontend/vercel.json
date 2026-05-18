@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://gerf-chatbot-a-chain.up.railway.app/api/:path*"
+    }
+  ]
+}

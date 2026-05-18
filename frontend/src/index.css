@@ -1,0 +1,333 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design tokens ──────────────────────────────────────────────────────── */
+:root {
+  /* Stone scale */
+  --echo-50:  #F8F9F8;
+  --echo-100: #ECEDEB;
+  --echo-200: #D6D7D4;
+  --echo-300: #B0B2AE;
+  --echo-500: #82847F;
+  --echo-900: #2A2D2C;
+
+  /* Primary teal */
+  --primary-300: #7BAFA8;
+  --primary-500: #4E8C84;
+  --primary-700: #2E6860;
+
+  /* Secondary accents */
+  --hay-active:      #B89A5A;
+  --hay-inactive:    #DAC99B;
+  --slate-active:    #5E7E9C;
+  --slate-inactive:  #B6BFCB;
+  --orange-active:   #C07B58;
+  --orange-inactive: #E0BEAC;
+
+  /* Gradients */
+  --entry-grad:    linear-gradient(160deg, #6BB8B0 0%, #4E8C84 30%, #2E6860 65%, #1B4A44 100%);
+  --primary-grad:  linear-gradient(135deg, #5FA199 0%, #4E8C84 45%, #2E6860 100%);
+  --btn-stone-50:  linear-gradient(180deg, #FAFBFA 0%, #F2F3F1 100%);
+  --btn-stone-500: linear-gradient(180deg, #888A85 0%, #7B7D77 100%);
+  --btn-stone-900: linear-gradient(180deg, #2F3231 0%, #242726 100%);
+  --btn-primary:   linear-gradient(180deg, #589A92 0%, #3F7A72 100%);
+
+  /* Shadows */
+  --sh-btn-light:   0 1px 0 rgba(255,255,255,0.6) inset, 0 1px 1.5px rgba(34,36,34,0.05), 0 2px 4px rgba(34,36,34,0.04);
+  --sh-btn-mid:     0 1px 0 rgba(255,255,255,0.10) inset, 0 1px 1.5px rgba(20,22,20,0.14), 0 2px 6px rgba(20,22,20,0.12);
+  --sh-btn-dark:    0 1px 0 rgba(255,255,255,0.06) inset, 0 1px 1.5px rgba(0,0,0,0.22), 0 4px 10px rgba(0,0,0,0.18);
+  --sh-input:       0 1px 0 rgba(255,255,255,0.6) inset, 0 1px 2px rgba(20,22,20,0.05), 0 6px 16px rgba(20,22,20,0.06);
+  --sh-bubble:      0 1px 1.5px rgba(20,22,20,0.06), 0 2px 6px rgba(20,22,20,0.04);
+  --sh-card:        0 2px 12px rgba(34,36,34,0.08), 0 1px 2px rgba(34,36,34,0.04);
+
+  /* Fonts */
+  --font-main:   'Pretendard', 'Pretendard Variable', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif;
+  --font-accent: 'Manrope', 'Inter', system-ui, sans-serif;
+  --tr-main:   -0.02em;
+  --tr-accent: -0.03em;
+}
+
+/* ── Base ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--echo-50);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+body {
+  font-family: var(--font-main);
+  color: var(--echo-900);
+  letter-spacing: var(--tr-main);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── Type scale ─────────────────────────────────────────────────────────── */
+
+/* Display — Manrope 700, 48px, -3%, used for ECHO hero on entry */
+.t-display {
+  font-family: var(--font-accent);
+  font-weight: 700;
+  font-size: 48px;
+  letter-spacing: var(--tr-accent);
+  line-height: 1.0;
+}
+
+/* Welcome — Manrope 700, 28px, -3%, 120% LH — welcoming text in entry & chat only */
+.t-welcome {
+  font-family: var(--font-accent);
+  font-weight: 700;
+  font-size: 28px;
+  letter-spacing: var(--tr-accent);
+  line-height: 1.2;
+}
+
+/* H1 — Pretendard 700, 22px, -2% */
+.t-h1 {
+  font-family: var(--font-main);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: var(--tr-main);
+  line-height: 1.3;
+}
+
+/* H2 — Pretendard 600, 17px, -2% */
+.t-h2 {
+  font-family: var(--font-main);
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: var(--tr-main);
+  line-height: 1.35;
+}
+
+/* H3 — Pretendard 600, 15px, -2% */
+.t-h3 {
+  font-family: var(--font-main);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: var(--tr-main);
+  line-height: 1.4;
+}
+
+/* Body — Pretendard 400, 14px, -2% */
+.t-body {
+  font-family: var(--font-main);
+  font-weight: 400;
+  font-size: 14px;
+  letter-spacing: var(--tr-main);
+  line-height: 1.5;
+}
+
+/* Body medium — Pretendard 500, 14px, -2% */
+.t-body-m {
+  font-family: var(--font-main);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: var(--tr-main);
+  line-height: 1.5;
+}
+
+/* Small — Pretendard 400, 12px, -2% */
+.t-small {
+  font-family: var(--font-main);
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: var(--tr-main);
+  line-height: 1.45;
+}
+
+/* Label — Manrope 600, 10px, uppercase, +12% tracking */
+.t-label {
+  font-family: var(--font-accent);
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+/* Numeric accent — Manrope 700, variable size, -3% */
+.t-num {
+  font-family: var(--font-accent);
+  font-weight: 700;
+  letter-spacing: var(--tr-accent);
+}
+
+/* ── Button base ────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 999px;
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: var(--tr-main);
+  line-height: 1;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: filter 0.15s ease;
+  user-select: none;
+  white-space: nowrap;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:hover  { filter: brightness(1.04); }
+.btn:active { filter: brightness(0.96); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+.btn:focus-visible { outline: 2px solid var(--primary-500); outline-offset: 2px; }
+
+.btn-light {
+  background: var(--btn-stone-50);
+  color: var(--echo-900);
+  border-color: rgba(34,36,34,0.07);
+}
+.btn-mid {
+  background: var(--btn-stone-500);
+  color: #FFFFFF;
+  border-color: rgba(0,0,0,0.03);
+}
+.btn-dark {
+  background: var(--btn-stone-900);
+  color: var(--echo-100);
+  border-color: rgba(0,0,0,0.10);
+}
+.btn-primary {
+  background: var(--btn-primary);
+  color: #FFFFFF;
+  border-color: rgba(20,40,38,0.08);
+}
+.btn-ghost {
+  background: rgba(255,255,255,0.14);
+  color: #FFFFFF;
+  border-color: rgba(255,255,255,0.28);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Sizes */
+.btn-sm { padding: 9px 18px;  font-size: 13px; }
+.btn-md { padding: 11px 22px; font-size: 14px; }
+.btn-lg { padding: 14px 28px; font-size: 15px; }
+
+/* ── Safe area ──────────────────────────────────────────────────────────── */
+.pb-safe  { padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+.pt-safe  { padding-top:    max(0px,  env(safe-area-inset-top)); }
+
+/* ── Hide scrollbar ─────────────────────────────────────────────────────── */
+.no-scroll::-webkit-scrollbar { display: none; }
+.no-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Entry card — animated gradient (CSS @property interpolation) ────────── */
+@property --b1x { syntax: '<percentage>'; inherits: false; initial-value: 98%; }
+@property --b1y { syntax: '<percentage>'; inherits: false; initial-value: 97%; }
+@property --b2x { syntax: '<percentage>'; inherits: false; initial-value: 43%; }
+@property --b2y { syntax: '<percentage>'; inherits: false; initial-value: 92%; }
+@property --b3x { syntax: '<percentage>'; inherits: false; initial-value: 95%; }
+@property --b3y { syntax: '<percentage>'; inherits: false; initial-value: 18%; }
+@property --b4x { syntax: '<percentage>'; inherits: false; initial-value: 72%; }
+@property --b4y { syntax: '<percentage>'; inherits: false; initial-value: 71%; }
+
+.entry-card-bg {
+  position: relative;
+  background-color: rgb(17, 27, 65);
+  background-image:
+    radial-gradient(circle at var(--b1x) var(--b1y), hsla(171, 38%, 29%, 1) 15%, transparent 50%),
+    radial-gradient(circle at var(--b2x) var(--b2y), hsla(209, 24%, 49%, 1) 30%, transparent 65%),
+    radial-gradient(circle at var(--b3x) var(--b3y), rgb(108, 159, 151) 16%, transparent 80%),
+    radial-gradient(circle at var(--b4x) var(--b4y), hsla(223, 78%, 67%, 1) 12%, transparent 20%);
+  background-blend-mode: normal, normal, normal, normal;
+  animation: entryCardFloat 24s ease-in-out infinite;
+}
+
+.entry-card-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 19.5px;
+  padding: 1px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes entryCardFloat {
+  0%, 100% {
+    --b1x: 98%; --b1y: 97%;
+    --b2x: 43%; --b2y: 92%;
+    --b3x: 95%; --b3y: 18%;
+    --b4x: 72%; --b4y: 71%;
+  }
+  25% {
+    --b1x: 90%; --b1y: 90%;
+    --b2x: 50%; --b2y: 86%;
+    --b3x: 88%; --b3y: 24%;
+    --b4x: 77%; --b4y: 66%;
+  }
+  50% {
+    --b1x: 95%; --b1y: 100%;
+    --b2x: 38%; --b2y: 95%;
+    --b3x: 98%; --b3y: 13%;
+    --b4x: 67%; --b4y: 76%;
+  }
+  75% {
+    --b1x: 100%; --b1y: 96%;
+    --b2x: 47%; --b2y: 89%;
+    --b3x: 90%; --b3y: 21%;
+    --b4x: 74%; --b4y: 68%;
+  }
+}
+
+/* ── Chat markdown ──────────────────────────────────────────────────────── */
+.chat-md p                   { margin: 0; line-height: 1.45; }
+.chat-md p + p               { margin-top: 8px; }
+.chat-md ul, .chat-md ol     { margin: 6px 0 0; padding-left: 18px; }
+.chat-md ul                  { list-style-type: disc; }
+.chat-md ol                  { list-style-type: decimal; }
+.chat-md li + li             { margin-top: 3px; }
+.chat-md ul + p,
+.chat-md ol + p              { margin-top: 8px; }
+.chat-md li > p              { margin: 0; display: inline; }
+.chat-md strong              { font-weight: 600; }
+.chat-md a                   { text-decoration: underline; word-break: break-all; }
+
+/* ── Live radiating dot ──────────────────────────────────────────────────── */
+@keyframes radiate-pulse {
+  0%   { transform: scale(1);   opacity: 0.65; }
+  65%  { transform: scale(2.5); opacity: 0; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* ── Community bubble animations ─────────────────────────────────────────── */
+@keyframes bubble-pop {
+  0%   { transform: scale(0.4); opacity: 0; }
+  70%  { transform: scale(1.08); }
+  100% { transform: scale(1);   opacity: 1; }
+}
+@keyframes float-a {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-5px); }
+}
+@keyframes float-b {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-7px); }
+}
+@keyframes float-c {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}

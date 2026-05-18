@@ -1,0 +1,22 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+
+# LangChain + SQL agent
+langchain
+langchain-openai
+langchain-community
+langchain-text-splitters
+sqlalchemy
+
+# Vector store + PDF
+faiss-cpu
+pypdf
+tiktoken
+
+# Supabase
+supabase
+
+# Data processing & integrations
+pandas
+pyairtable
