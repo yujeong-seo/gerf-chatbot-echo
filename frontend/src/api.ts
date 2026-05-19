@@ -87,15 +87,6 @@ export async function savePreferences(threadId: string, interestIds: string[]): 
   if (!res.ok) throw new Error(`Preferences API error: ${res.status}`)
 }
 
-export async function transcribeAudio(blob: Blob): Promise<string> {
-  const form = new FormData()
-  form.append('audio', blob, 'audio.webm')
-  const res = await fetch(`${BASE_URL}/api/transcribe`, { method: 'POST', body: form })
-  if (!res.ok) throw new Error(`Transcribe error: ${res.status}`)
-  const data = await res.json()
-  return data.text ?? ''
-}
-
 export async function registerInterest(
   _email: string,
   _consent: boolean,

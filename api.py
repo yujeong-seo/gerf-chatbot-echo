@@ -5,7 +5,7 @@ import sqlite3
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from pydantic import BaseModel
@@ -690,28 +690,6 @@ def get_trending():
     return result
 
 
-@app.post("/api/transcribe")
-async def transcribe_audio(audio: UploadFile = File(...)):
-    """Transcribe uploaded audio using OpenAI Whisper."""
-    import tempfile
-    import openai
-
-    data = await audio.read()
-    suffix = ".webm"
-    if audio.filename and "." in audio.filename:
-        suffix = "." + audio.filename.rsplit(".", 1)[-1]
-
-    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-        tmp.write(data)
-        tmp_path = tmp.name
-
-    try:
-        client = openai.OpenAI()
-        with open(tmp_path, "rb") as f:
-            transcript = client.audio.transcriptions.create(model="whisper-1", file=f)
-        return {"text": transcript.text}
-    finally:
-        os.unlink(tmp_path)
 
 
 @app.post("/api/parse-session")
