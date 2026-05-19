@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Chip from './Chip'
 import { INTEREST_OPTIONS, STORAGE_KEY } from './InterestTags'
 import { savePreferences } from '../api'
@@ -21,6 +21,8 @@ export default function InlineInterestPrompt({ threadId }: Props) {
   const [currentInterests, setCurrentInterests] = useState<string[]>(readStored)
   const [hasSaved,         setHasSaved]         = useState(false)
   const [saveState,        setSaveState]        = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [showToast,        setShowToast]        = useState(false)
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const isDirty =
     JSON.stringify([...currentInterests].sort()) !==
@@ -29,6 +31,12 @@ export default function InlineInterestPrompt({ threadId }: Props) {
   // Show button row unless: user has saved once AND no pending changes
   const showButtons = !hasSaved || isDirty
 
+  function triggerToast() {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    setShowToast(true)
+    toastTimerRef.current = setTimeout(() => setShowToast(false), 2000)
+  }
+
   function toggle(id: string) {
     setCurrentInterests(prev => {
       const next = new Set(prev)
@@ -36,6 +44,8 @@ export default function InlineInterestPrompt({ threadId }: Props) {
         next.delete(id)
       } else if (next.size < MAX_SELECTED) {
         next.add(id)
+      } else {
+        triggerToast()
       }
       return [...next]
     })
@@ -61,9 +71,9 @@ export default function InlineInterestPrompt({ threadId }: Props) {
   const count = currentInterests.length
 
   return (
+    <>
     <div
-      className="w-full bg-white rounded-[18px] border border-[rgba(34,36,34,0.07)] px-4 py-3"
-      style={{ boxShadow: 'var(--sh-bubble)' }}
+      className="w-full bg-white rounded-[18px] border border-echo-100 px-4 py-3"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-1">
@@ -111,17 +121,11 @@ export default function InlineInterestPrompt({ threadId }: Props) {
       }}>
         <div style={{ overflow: 'hidden' }}>
           <div className="flex gap-2 pt-0">
-            {/* Cancel — only when dirty after first save */}
             {isDirty && (
-              <button
-                onClick={handleCancel}
-                className="btn btn-light btn-sm flex-1"
-              >
+              <button onClick={handleCancel} className="btn btn-light btn-sm flex-1">
                 Cancel
               </button>
             )}
-
-            {/* Save / Save Changes */}
             <button
               onClick={handleSave}
               disabled={saveState === 'saving' || count === 0}
@@ -136,6 +140,40 @@ export default function InlineInterestPrompt({ threadId }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Saved / Unsaved label */}
+      {hasSaved && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
+          <span style={{ fontFamily: 'var(--font-main)', fontSize: 12, color: 'var(--echo-500)' }}>
+            {isDirty ? 'Unsaved' : 'Saved'}
+          </span>
+        </div>
+      )}
     </div>
+
+    {/* Max-interests toast */}
+    {showToast && (
+      <div style={{
+        position:             'fixed',
+        bottom:               120,
+        left:                 '50%',
+        transform:            'translateX(-50%)',
+        background:           'rgba(39,39,39,0.92)',
+        color:                '#FFFFFF',
+        padding:              '10px 20px',
+        borderRadius:         999,
+        fontFamily:           'var(--font-main)',
+        fontSize:             13,
+        fontWeight:           500,
+        letterSpacing:        'var(--tr-main)',
+        whiteSpace:           'nowrap',
+        zIndex:               200,
+        backdropFilter:       'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+      }}>
+        Max 5 interests
+      </div>
+    )}
+  </>
   )
 }

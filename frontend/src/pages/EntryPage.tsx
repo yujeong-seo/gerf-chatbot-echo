@@ -135,12 +135,12 @@ export default function EntryPage() {
   const visitLabel = visitType === 'test' ? 'Testing' : visitType === 'pre' ? 'Pre-visit' : visitType === 'on' ? 'On-visit' : 'Post-visit'
 
   return (
-    <PageShell bg="bg-transparent" outerStyle={{ background: 'linear-gradient(180deg, #F8F9F8 0%, #ECEDEB 100%)' }}>
+    <PageShell>
       <div className="flex-1 flex flex-col px-6 pt-8 pb-4 gap-5 min-h-0 justify-center">
 
         {/* ── Logo header ── */}
         <div className="flex flex-col items-center pb-6 gap-4 flex-shrink-0">
-          <p className="t-small text-echo-900 m-0 text-center">Every Conversation Happens Once</p>
+          <p className="t-small text-echo-900 m-0 text-center">Event Conversations. Heard. Ongoing.</p>
           <div className="flex items-center gap-3">
             <Logo size={34} color="var(--echo-900)" />
             <span style={{

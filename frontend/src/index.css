@@ -5,25 +5,45 @@
 /* ── Design tokens ──────────────────────────────────────────────────────── */
 :root {
   /* Stone scale */
-  --echo-50:  #F8F9F8;
-  --echo-100: #ECEDEB;
-  --echo-200: #D6D7D4;
-  --echo-300: #B0B2AE;
-  --echo-500: #82847F;
-  --echo-900: #2A2D2C;
+  --stone-50:    #F7F7F7;
+  --stone-100:   #F5F5F5;
+  --stone-150:   #F4F4F4;
+  --stone-200:   #F0F0F0;
+  --stone-300:   #D9D9D9;
+  --stone-500:   #8F8F8F;
+  --stone-700:   #42474A;
+  --stone-800:   #3A3A3A;
+  --stone-850:   #2E3133;
+  --stone-900:   #272727;
 
   /* Primary teal */
-  --primary-300: #7BAFA8;
-  --primary-500: #4E8C84;
-  --primary-700: #2E6860;
+  --primary-300: #6FA59C;
+  --primary-500: #3F8579;
+  --primary-700: #2E665E;
+  --primary-tint: rgba(46,102,94,0.20);
 
   /* Secondary accents */
-  --hay-active:      #B89A5A;
-  --hay-inactive:    #DAC99B;
   --slate-active:    #5E7E9C;
   --slate-inactive:  #B6BFCB;
+  --slate-tint:      rgba(94,126,156,0.20);
   --orange-active:   #C07B58;
   --orange-inactive: #E0BEAC;
+  --orange-tint:     rgba(192,123,88,0.20);
+  --hay-active:      #B89A5A;
+  --hay-inactive:    #DAC99B;
+  --hay-tint:        rgba(184,154,90,0.20);
+  --green-active:    #299571;
+  --green-inactive:  #B7DCC9;
+  --green-tint:      rgba(41,149,113,0.18);
+
+  /* Canvas */
+  --bg-canvas: linear-gradient(180deg, #FFFFFF 0%, #F7F7F7 100%);
+
+  /* Card surfaces */
+  --card-mid-bg:      linear-gradient(180deg, #F5F5F5 0%, #F0F0F0 100%);
+  --card-dark-bg:     linear-gradient(180deg, #42474A 0%, #2E3133 100%);
+  --tab-container-bg: linear-gradient(180deg, #F4F4F4 0%, #F0F0F0 100%);
+  --tab-active-bg:    linear-gradient(180deg, #3A3A3A 0%, #272727 100%);
 
   /* Gradients */
   --entry-grad:    linear-gradient(160deg, #6BB8B0 0%, #4E8C84 30%, #2E6860 65%, #1B4A44 100%);
@@ -34,11 +54,14 @@
   --btn-primary:   linear-gradient(180deg, #589A92 0%, #3F7A72 100%);
 
   /* Shadows */
+  --shadow-tab-active:   0 0 10px rgba(0,0,0,0.25);
+  --shadow-card-light:   0 0 10px rgba(0,0,0,0.04);
+  --shadow-chip-round:   0 0 6px rgba(0,0,0,0.10);
+  --shadow-bubble-inset: inset 0 0 20px 0 rgba(255,255,255,0.80);
   --sh-btn-light:   0 1px 0 rgba(255,255,255,0.6) inset, 0 1px 1.5px rgba(34,36,34,0.05), 0 2px 4px rgba(34,36,34,0.04);
   --sh-btn-mid:     0 1px 0 rgba(255,255,255,0.10) inset, 0 1px 1.5px rgba(20,22,20,0.14), 0 2px 6px rgba(20,22,20,0.12);
   --sh-btn-dark:    0 1px 0 rgba(255,255,255,0.06) inset, 0 1px 1.5px rgba(0,0,0,0.22), 0 4px 10px rgba(0,0,0,0.18);
   --sh-input:       0 1px 0 rgba(255,255,255,0.6) inset, 0 1px 2px rgba(20,22,20,0.05), 0 6px 16px rgba(20,22,20,0.06);
-  --sh-bubble:      0 1px 1.5px rgba(20,22,20,0.06), 0 2px 6px rgba(20,22,20,0.04);
   --sh-card:        0 2px 12px rgba(34,36,34,0.08), 0 1px 2px rgba(34,36,34,0.04);
 
   /* Fonts */
@@ -46,6 +69,15 @@
   --font-accent: 'Manrope', 'Inter', system-ui, sans-serif;
   --tr-main:   -0.02em;
   --tr-accent: -0.03em;
+
+  /* Aliases — keeps un-migrated components rendering */
+  --echo-50:  var(--stone-50);
+  --echo-100: var(--stone-100);
+  --echo-200: var(--stone-200);
+  --echo-300: var(--stone-300);
+  --echo-400: var(--stone-500);
+  --echo-500: var(--stone-500);
+  --echo-900: var(--stone-900);
 }
 
 /* ── Base ───────────────────────────────────────────────────────────────── */
@@ -54,7 +86,8 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--echo-50);
+  background: var(--bg-canvas);
+  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -65,7 +98,7 @@ html, body {
 
 body {
   font-family: var(--font-main);
-  color: var(--echo-900);
+  color: var(--stone-900);
   letter-spacing: var(--tr-main);
   font-size: 14px;
   line-height: 1.5;
@@ -189,24 +222,24 @@ body {
 .btn:focus-visible { outline: 2px solid var(--primary-500); outline-offset: 2px; }
 
 .btn-light {
-  background: var(--btn-stone-50);
+  background: var(--echo-100);
   color: var(--echo-900);
-  border-color: rgba(34,36,34,0.07);
+  border-color: var(--echo-200);
 }
 .btn-mid {
-  background: var(--btn-stone-500);
+  background: var(--echo-500);
   color: #FFFFFF;
-  border-color: rgba(0,0,0,0.03);
+  border-color: transparent;
 }
 .btn-dark {
-  background: var(--btn-stone-900);
+  background: var(--echo-900);
   color: var(--echo-100);
-  border-color: rgba(0,0,0,0.10);
+  border-color: transparent;
 }
 .btn-primary {
-  background: var(--btn-primary);
+  background: var(--primary-500);
   color: #FFFFFF;
-  border-color: rgba(20,40,38,0.08);
+  border-color: transparent;
 }
 .btn-ghost {
   background: rgba(255,255,255,0.14);
@@ -311,6 +344,25 @@ body {
   0%   { transform: scale(1);   opacity: 0.65; }
   65%  { transform: scale(2.5); opacity: 0; }
   100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* ── Chat thinking shimmer ───────────────────────────────────────────────── */
+@keyframes thinking-shimmer {
+  0%   { background-position: 100% center; }
+  100% { background-position: -100% center; }
+}
+@keyframes thinking-shimmer-icon {
+  0%   { color: var(--stone-500); }
+  35%  { color: var(--stone-900); }
+  50%  { color: var(--stone-300); }
+  65%  { color: var(--stone-900); }
+  100% { color: var(--stone-500); }
+}
+
+/* ── Audio waveform bars ─────────────────────────────────────────────────── */
+@keyframes audio-bar {
+  0%, 100% { transform: scaleY(0.25); }
+  50%       { transform: scaleY(1.0);  }
 }
 
 /* ── Community bubble animations ─────────────────────────────────────────── */

@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react'
 import Chip from './Chip'
 
-export const INTEREST_OPTIONS = [
-  { id: 'art',         label: 'Art & Design' },
-  { id: 'science',     label: 'Science' },
-  { id: 'music',       label: 'Music & Performance' },
-  { id: 'family',      label: 'Family & Kids' },
-  { id: 'food',        label: 'Food & Drink' },
-  { id: 'talks',       label: 'Talks & Debates' },
-  { id: 'engineering', label: 'Engineering' },
-  { id: 'environment', label: 'Environment' },
-  { id: 'culture',     label: 'Culture & History' },
-  { id: 'outdoor',     label: 'Outdoor' },
+export const INTEREST_OPTIONS = [  
+  {id: 'space', label: 'Space' },
+  {id: 'technology', label: 'Technology' },
+  {id: 'music', label: 'Music & Performance' },
+  {id: 'dance', label: 'Dance' },
+  {id: 'medicine', label: 'Medicine' },
+  {id: 'nature', label: 'Nature' },
+  {id: 'environment', label: 'Environment' },
+  {id: 'history', label: 'History' },
+  {id: 'math', label: 'Maths' },
+  {id: 'interactive', label: 'Interactive' },
+  {id: 'wellbeing', label: 'Wellbeing' },
+  {id: 'food', label: 'Food' },
+  {id: 'art', label: 'Art & Design' },
 ]
 
 const MAX_SELECTED = 5

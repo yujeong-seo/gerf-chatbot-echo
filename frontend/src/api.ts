@@ -1,6 +1,6 @@
 import type { InlineCalendar, Keyword } from './types'
 
-export const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+export const BASE_URL = import.meta.env.VITE_API_URL ?? ''
 
 // ── Mocks ─────────────────────────────────────────────────────────────────
 
@@ -85,6 +85,15 @@ export async function savePreferences(threadId: string, interestIds: string[]): 
     body:    JSON.stringify({ thread_id: threadId, interest_ids: interestIds }),
   })
   if (!res.ok) throw new Error(`Preferences API error: ${res.status}`)
+}
+
+export async function transcribeAudio(blob: Blob): Promise<string> {
+  const form = new FormData()
+  form.append('audio', blob, 'audio.webm')
+  const res = await fetch(`${BASE_URL}/api/transcribe`, { method: 'POST', body: form })
+  if (!res.ok) throw new Error(`Transcribe error: ${res.status}`)
+  const data = await res.json()
+  return data.text ?? ''
 }
 
 export async function registerInterest(

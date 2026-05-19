@@ -57,9 +57,7 @@ function PersonaliseSection({ threadId }: { threadId: string }) {
       <h2 className="t-h2 text-echo-900 m-0">Personalise Your Experience</h2>
 
       <div className="flex flex-col gap-2">
-        {/* Card — no border, shadow only */}
-        <div className="rounded-[12px] bg-white px-4 pt-4 pb-4"
-          style={{ boxShadow: 'var(--sh-card)' }}>
+        <div className="rounded-[12px] bg-white border border-echo-100 px-4 pt-4 pb-4">
 
           {/* Name */}
           <div className="pb-3">
@@ -137,8 +135,7 @@ function RegisterSection() {
     return (
       <>
         <h2 className="t-h2 text-echo-900 m-0">Register Interest</h2>
-        <div className="rounded-[12px] bg-white px-4 py-6 flex flex-col items-center gap-3"
-          style={{ boxShadow: 'var(--sh-card)' }}>
+        <div className="rounded-[12px] bg-white border border-echo-100 px-4 py-6 flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-primary-500 flex items-center justify-center">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
               <path d="M19 6L9.375 17L5 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -161,8 +158,7 @@ function RegisterSection() {
       </p>
 
 
-      <div className="rounded-[12px] bg-white px-4 pt-4 pb-4 flex flex-col gap-0"
-        style={{ boxShadow: 'var(--sh-card)' }}>
+      <div className="rounded-[12px] bg-white border border-echo-100 px-4 pt-4 pb-4 flex flex-col gap-0">
         {/* Email input */}
         <div>
           <label htmlFor="user-email-input" className="m-0 mb-1.5 block" style={{ fontFamily: 'var(--font-main)', fontSize: 12, fontWeight: 600, color: 'var(--echo-300)' }}>

@@ -41,6 +41,17 @@ function CalendarIcon() {
   )
 }
 
+function DownloadIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  )
+}
+
 const _DATE_LABELS: Record<string, string> = {
   Saturday: 'Sat 6 June 2026',
   Sunday:   'Sun 7 June 2026',
@@ -55,8 +66,7 @@ export default function InlineCalendarCard({ gcal_url, ics_url, title, location,
 
   return (
     <div
-      className="w-full bg-white rounded-[18px] border border-[rgba(34,36,34,0.07)] px-4 py-3"
-      style={{ boxShadow: 'var(--sh-bubble)' }}
+      className="w-full bg-white rounded-[18px] border border-echo-100 px-4 py-3"
     >
       {/* Title */}
       <p className="m-0 mb-2 text-echo-900 truncate"
@@ -89,16 +99,15 @@ export default function InlineCalendarCard({ gcal_url, ics_url, title, location,
           href={gcal_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-[10px] border text-[12px] font-semibold transition-all active:scale-[0.97]"
+          className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-[12px] border text-[12px] font-semibold transition-all active:scale-[0.97]"
           style={{
-            background:  'var(--btn-primary)',
-            borderColor: 'rgba(20,40,38,0.08)',
+            background:  'var(--primary-500)',
+            borderColor: 'transparent',
             color:       '#fff',
-            boxShadow:   'var(--sh-btn-mid)',
           }}
         >
           <CalendarIcon />
-          google
+          Google Calender
         </a>
 
         <a
@@ -106,15 +115,15 @@ export default function InlineCalendarCard({ gcal_url, ics_url, title, location,
           target="_blank"
           rel="noopener noreferrer"
           download
-          className="flex items-center justify-center gap-1.5 px-4 h-9 rounded-[10px] border text-[12px] font-semibold transition-all active:scale-[0.97]"
+          className="flex items-center justify-center gap-1.5 px-4 h-9 rounded-[12px] border text-[12px] font-semibold transition-all active:scale-[0.97]"
           style={{
-            background:  'var(--btn-stone-50)',
-            borderColor: 'rgba(34,36,34,0.07)',
+            background:  'var(--echo-100)',
+            borderColor: 'var(--echo-200)',
             color:       'var(--echo-900)',
-            boxShadow:   'var(--sh-btn-light)',
           }}
         >
-          ics
+          <DownloadIcon />
+          Apple / Outlook
         </a>
       </div>
     </div>

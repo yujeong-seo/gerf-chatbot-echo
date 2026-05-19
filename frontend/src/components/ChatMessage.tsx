@@ -1,5 +1,6 @@
 import ReactMarkdown from 'react-markdown'
 import remarkGfm     from 'remark-gfm'
+import Logo          from './Logo'
 
 interface Props {
   role:       'user' | 'assistant'
@@ -20,7 +21,6 @@ function ExternalLinkIcon() {
   )
 }
 
-/** Ensure a blank line separates the last list item from any follow-up sentence. */
 function normalizeMarkdown(text: string): string {
   return text.replace(/(- [^\n]+)\n([^-\n*#> \t])/g, '$1\n\n$2')
 }
@@ -30,16 +30,20 @@ export default function ChatMessage({ role, content, timestamp, eventUrl, eventN
 
   const bubble = (
     <div
-      className={`max-w-[78%] px-4 py-[11px] rounded-[18px] t-body min-w-0 ${
-        isUser
-          ? 'text-white rounded-br-[6px] border border-[rgba(20,40,38,0.10)]'
-          : 'bg-white text-echo-900 rounded-bl-[6px] border border-[rgba(34,36,34,0.05)]'
-      }`}
       style={{
-        background:   isUser ? 'var(--primary-500)' : undefined,
-        boxShadow:    'var(--sh-bubble)',
+        maxWidth:     '78%',
+        padding:      '11px 16px',
+        borderRadius: isUser ? '18px 18px 6px 18px' : '6px 18px 18px 18px',
+        background:   isUser ? 'var(--primary-500)' : '#FFFFFF',
+        border:       isUser ? 'none' : '1px solid #F0F0F0',
         wordBreak:    'break-word',
         overflowWrap: 'break-word',
+        fontFamily:   'var(--font-main)',
+        fontSize:     14,
+        fontWeight:   400,
+        letterSpacing: 'var(--tr-main)',
+        lineHeight:   1.5,
+        color:        isUser ? '#FFFFFF' : 'var(--stone-900)',
       }}
     >
       <div className="chat-md">
@@ -48,31 +52,65 @@ export default function ChatMessage({ role, content, timestamp, eventUrl, eventN
         </ReactMarkdown>
       </div>
 
-      {/* Event source citation — only for assistant messages */}
       {!isUser && eventUrl && (
         <a
           href={eventUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 mt-2 pt-2 no-underline"
-          style={{ borderTop: '1px solid rgba(34,36,34,0.06)' }}
+          style={{
+            display:       'flex',
+            alignItems:    'center',
+            gap:           6,
+            marginTop:     8,
+            paddingTop:    8,
+            borderTop:     '1px solid rgba(34,36,34,0.06)',
+            textDecoration: 'none',
+          }}
         >
-          <span className="text-echo-300 flex-shrink-0"><ExternalLinkIcon /></span>
-          <span className="t-small text-echo-300 truncate">{eventName}</span>
+          <span style={{ color: 'var(--stone-300)', flexShrink: 0 }}><ExternalLinkIcon /></span>
+          <span style={{
+            fontFamily: 'var(--font-main)', fontSize: 12, color: 'var(--stone-300)',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {eventName}
+          </span>
         </a>
       )}
     </div>
   )
 
-  const time = timestamp ? (
-    <span className="t-small text-echo-500 flex-shrink-0 self-end mb-0.5" style={{ minWidth: 32 }}>
-      {timestamp}
-    </span>
-  ) : null
+  if (isUser) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', gap: 8 }}>
+        {timestamp && (
+          <span style={{
+            fontFamily: 'var(--font-main)', fontSize: 12, color: 'var(--stone-500)',
+            flexShrink: 0, alignSelf: 'flex-end', marginBottom: 2,
+          }}>
+            {timestamp}
+          </span>
+        )}
+        {bubble}
+      </div>
+    )
+  }
 
   return (
-    <div className={`flex items-end gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
-      {isUser ? <>{time}{bubble}</> : <>{bubble}{time}</>}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
+      {/* Logo avatar + label row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Logo size={16} color="var(--stone-500)" />
+        <span style={{
+          fontFamily:    'var(--font-main)',
+          fontSize:      12,
+          fontWeight:    500,
+          color:         'var(--stone-500)',
+          letterSpacing: 'var(--tr-main)',
+        }}>
+          ECHO{timestamp ? ` · ${timestamp}` : ''}
+        </span>
+      </div>
+      {bubble}
     </div>
   )
 }

@@ -11,12 +11,12 @@ interface Props {
 }
 
 const base =
-  'inline-flex items-center gap-1.5 px-4 py-[9px] rounded-full border text-[13px] font-medium leading-none tracking-main transition-all duration-150 -webkit-tap-highlight-color-transparent select-none'
+  'inline-flex items-center gap-1.5 px-4 py-[9px] rounded-full border text-[13px] font-medium leading-none tracking-main transition-all duration-150 -webkit-tap-highlight-color-transparent select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1'
 
 const variants: Record<Variant, string> = {
   primary: 'bg-primary-500 text-white border-transparent',
   deep:    'bg-primary-700 text-white border-transparent',
-  outline: 'bg-transparent text-echo-900 border-echo-300 hover:border-primary-500',
+  outline: 'bg-transparent text-echo-900 border-echo-300 hover:bg-echo-100 hover:border-primary-300',
   muted:   'bg-echo-100 text-echo-500 border-echo-200',
   slate:   'bg-slate-a text-white border-transparent',
   hay:     'bg-hay-a text-white border-transparent',

@@ -27,6 +27,11 @@ export interface InlineInterest {
   threadId: string
 }
 
+export interface InlineEmail {
+  type:     'email'
+  threadId: string
+}
+
 export interface InlineTicket {
   type:           'ticket'
   url:            string
@@ -36,7 +41,7 @@ export interface InlineTicket {
   arrival_notes?: string | null
 }
 
-export type InlineCard = InlineCalendar | InlineLink | InlineInterest | InlineTicket
+export type InlineCard = InlineCalendar | InlineLink | InlineInterest | InlineTicket | InlineEmail
 
 // ── Chat ──────────────────────────────────────────────────────────────────
 

@@ -5,7 +5,7 @@ import sqlite3
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from pydantic import BaseModel
@@ -619,7 +619,7 @@ def _compute_trending() -> dict:
     insights = []
     for activity, count in top_activities:
         row = conn.execute(
-            "SELECT title, venue_name, time, short_description, experience_type, audience_tags"
+            "SELECT title, venue_name, time, experience_type, audience_tags"
             " FROM events WHERE lower(title) = lower(?) LIMIT 1",
             (activity,),
         ).fetchone()
@@ -629,19 +629,18 @@ def _compute_trending() -> dict:
                 tags.append(row["experience_type"])
             tags.extend(_parse_audience_tags(row["audience_tags"])[:2])
         insights.append({
-            "title":       row["title"]              if row else activity,
-            "venue":       row["venue_name"]          if row else "",
-            "time":        row["time"]                if row else "",
-            "description": (row["short_description"]  if row else "") or "",
-            "count":       count,
-            "tags":        tags,
+            "title": row["title"]    if row else activity,
+            "venue": row["venue_name"] if row else "",
+            "time":  row["time"]     if row else "",
+            "count": count,
+            "tags":  tags,
         })
 
     # Pad to 3 with random events if Supabase returned fewer than 3
     if len(insights) < 3:
         existing_titles = {ins["title"] for ins in insights}
         placeholders = conn.execute(
-            "SELECT title, venue_name, time, short_description, experience_type, audience_tags"
+            "SELECT title, venue_name, time, experience_type, audience_tags"
             " FROM events WHERE title NOT IN ({}) ORDER BY RANDOM() LIMIT ?".format(
                 ",".join("?" * len(existing_titles)) if existing_titles else "''"
             ),
@@ -653,12 +652,11 @@ def _compute_trending() -> dict:
                 tags.append(p["experience_type"])
             tags.extend(_parse_audience_tags(p["audience_tags"])[:2])
             insights.append({
-                "title":       p["title"]             or "",
-                "venue":       p["venue_name"]         or "",
-                "time":        p["time"]               or "",
-                "description": p["short_description"]  or "",
-                "count":       0,
-                "tags":        tags,
+                "title": p["title"]    or "",
+                "venue": p["venue_name"] or "",
+                "time":  p["time"]     or "",
+                "count": 0,
+                "tags":  tags,
             })
 
     conn.close()
@@ -690,6 +688,30 @@ def get_trending():
     _set_mem_cache(result)
     _set_trending_cache_sb(result["popular_now"], result["insights"], result["live"])
     return result
+
+
+@app.post("/api/transcribe")
+async def transcribe_audio(audio: UploadFile = File(...)):
+    """Transcribe uploaded audio using OpenAI Whisper."""
+    import tempfile
+    import openai
+
+    data = await audio.read()
+    suffix = ".webm"
+    if audio.filename and "." in audio.filename:
+        suffix = "." + audio.filename.rsplit(".", 1)[-1]
+
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+        tmp.write(data)
+        tmp_path = tmp.name
+
+    try:
+        client = openai.OpenAI()
+        with open(tmp_path, "rb") as f:
+            transcript = client.audio.transcriptions.create(model="whisper-1", file=f)
+        return {"text": transcript.text}
+    finally:
+        os.unlink(tmp_path)
 
 
 @app.post("/api/parse-session")

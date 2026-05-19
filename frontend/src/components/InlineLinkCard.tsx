@@ -20,8 +20,7 @@ export default function InlineLinkCard({ url, name }: Props) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="w-full flex items-center gap-3 bg-white rounded-[18px] border border-[rgba(34,36,34,0.07)] px-4 py-3 no-underline transition-all active:scale-[0.98]"
-      style={{ boxShadow: 'var(--sh-bubble)' }}
+      className="w-full flex items-center gap-3 bg-white rounded-[18px] border border-echo-100 px-4 py-3 no-underline transition-all active:scale-[0.98]"
     >
       {/* Square teal icon */}
       <div
@@ -30,10 +29,8 @@ export default function InlineLinkCard({ url, name }: Props) {
           width:        40,
           height:       40,
           borderRadius: 12,
-          background:   'var(--btn-primary)',
+          background:   'var(--primary-500)',
           color:        '#fff',
-          boxShadow:    'var(--sh-btn-mid)',
-          border:       '1px solid rgba(20,40,38,0.08)',
         }}
       >
         <CornerUpRightIcon />

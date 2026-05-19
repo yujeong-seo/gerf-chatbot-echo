@@ -19,8 +19,7 @@ function TicketIcon() {
 export default function InlineTicketCard({ url, title, subtitle, is_free, arrival_notes }: Props) {
   return (
     <div
-      className="w-full bg-white rounded-[18px] border border-[rgba(34,36,34,0.07)]"
-      style={{ boxShadow: 'var(--sh-bubble)' }}
+      className="w-full bg-white rounded-[18px] border border-echo-100"
     >
       <a
         href={url}
@@ -35,10 +34,8 @@ export default function InlineTicketCard({ url, title, subtitle, is_free, arriva
             width:        40,
             height:       40,
             borderRadius: 12,
-            background:   'var(--btn-primary)',
+            background:   'var(--primary-500)',
             color:        '#fff',
-            boxShadow:    'var(--sh-btn-mid)',
-            border:       '1px solid rgba(20,40,38,0.08)',
           }}
         >
           <TicketIcon />
