@@ -35,14 +35,22 @@ _feedback_state: dict[str, dict] = {}
 
 _FEEDBACK_INTENT_PHRASES = [
     "share my experience",
+    "share experience",
     "share feedback",
     "give feedback",
+    "leave feedback",
+    "leave a review",
     "tell you about",
     "want to share",
     "like to share",
     "provide feedback",
     "share thoughts",
     "share my thoughts",
+    "want to tell you",
+    "had a great time",
+    "had a good time",
+    "had an amazing",
+    "really enjoyed",
 ]
 
 # Patterns that signal the user wants event/logistics info, not to share feedback
@@ -82,7 +90,7 @@ def _state(thread_id: str) -> dict:
     return _feedback_state.get(thread_id, {})
 
 
-def _init_state(thread_id: str, interaction_stage: str | None = None) -> None:
+def _init_state(thread_id: str, interaction_stage: str | None = None, username: str = "") -> None:
     _feedback_state[thread_id] = {
         "active":             True,
         "stage":              "opening",
@@ -90,6 +98,7 @@ def _init_state(thread_id: str, interaction_stage: str | None = None) -> None:
         "pending_main_q":     None,
         "pending_follow_ups": [],
         "interaction_stage":  interaction_stage,
+        "username":           username,
         "messages":           [],   # feedback-session-only LLM context (no pre-feedback history)
         "reluctance_count":   0,
     }
@@ -129,6 +138,7 @@ def run_feedback_agent(
     thread_id: str,
     user_message: str,
     interaction_stage: str | None = None,
+    username: str = "",
 ) -> Optional[str]:
     """Run one turn of the feedback conversation.
 
@@ -144,7 +154,7 @@ def run_feedback_agent(
 
     # Initialise state for a new feedback conversation
     if not st.get("active"):
-        _init_state(thread_id, interaction_stage)
+        _init_state(thread_id, interaction_stage, username=username)
         st = _state(thread_id)
 
     # Persist user message to shared conversation history (for post-session parsing)
@@ -176,6 +186,9 @@ def run_feedback_agent(
 
     # ── Build LLM message list (feedback-session context only) ────────────────
     system_text = _load_prompt()
+    visitor_name = st.get("username", "")
+    if visitor_name:
+        system_text += f"\n\nVISITOR NAME: The visitor's name is {visitor_name}. Use it naturally once or twice — at a warm moment, not in every message."
     if st["reluctance_count"] >= 2:
         system_text += _RELUCTANCE_DIRECTIVE
 

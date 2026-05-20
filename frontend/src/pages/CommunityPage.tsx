@@ -15,27 +15,30 @@ const LIVE_TEXT_TEST = 'Moving through time: A dance experiment'
 
 const TEST_ACTIVITIES: InsightItem[] = [
   {
+    id:          'family-stage-2026',
     title:       'Family Stage',
     venue:       'Kensington Gardens, East Albert Lawn',
     time:        '12:00–18:00',
     description: '',
-    count:       0,
+    count:       20,
     tags:        ['Performance', 'Family'],
   },
   {
+    id:          'discover-design-engineering',
     title:       'Discover Design Engineering',
     venue:       'Dyson Building, Imperial College London',
     time:        '12:00–18:00',
     description: '',
-    count:       0,
+    count:       10,
     tags:        ['Exhibit', 'Engineering'],
   },
   {
+    id:          'RoboFootball',
     title:       'RoboFootball',
     venue:       'The Smith Centre, Science Museum',
     time:        '12:00–18:00',
     description: '',
-    count:       0,
+    count:       5,
     tags:        ['Exhibit', 'Robotics'],
   },
 ]
@@ -54,7 +57,7 @@ const FALLBACK_KEYWORD_TEXTS = [
 ]
 
 function generateFallbackKeywords(): Keyword[] {
-  const weights: Array<1|2|3|4|5> = [5, 3, 4, 2, 5, 3, 4, 2, 3, 4]
+  const weights: Array<1|2|3|4|5|6|7|8|9|10> = [10, 8, 7, 6, 5, 4, 3, 3, 2, 2]
   return [...FALLBACK_KEYWORD_TEXTS]
     .map((t, i) => ({ t, i, sort: Math.random() }))
     .sort((a, b) => a.sort - b.sort)
@@ -563,8 +566,9 @@ export default function CommunityPage() {
   const [keywords,        setKeywords]        = useState<Keyword[]>([])
   const [insights,        setInsights]        = useState<InsightItem[]>([])
   const [selectedKwId,    setSelectedKwId]    = useState<string | null>(null)
-  const [selectedInsight, setSelectedInsight] = useState<string | null>(null)
-  const [expanded,        setExpanded]        = useState(false)
+  const [selectedInsight,   setSelectedInsight]   = useState<string | null>(null)
+  const [selectedInsightId, setSelectedInsightId] = useState<string | null>(null)
+  const [expanded,          setExpanded]          = useState(false)
   const [modalMounted,    setModalMounted]    = useState(false)
   const [modalShowing,    setModalShowing]    = useState(false)
 
@@ -591,10 +595,13 @@ export default function CommunityPage() {
   function handleBubble(id: string) {
     setSelectedKwId(p => p === id ? null : id)
     setSelectedInsight(null)
+    setSelectedInsightId(null)
   }
 
-  function handleInsight(title: string) {
-    setSelectedInsight(p => p === title ? null : title)
+  function handleInsight(title: string, id?: string) {
+    const next = selectedInsight === title ? null : title
+    setSelectedInsight(next)
+    setSelectedInsightId(next ? (id ?? null) : null)
     setSelectedKwId(null)
   }
 
@@ -616,10 +623,11 @@ export default function CommunityPage() {
 
   function handleExplore() {
     if (!exploreLabel) return
-    const marker = selectedKw ? '<<P>>' : '<<C>>'
+    const marker  = selectedKw ? '<<P>>' : '<<C>>'
+    const idPart  = selectedInsightId ? ` event_id:${selectedInsightId}` : ''
     sessionStorage.setItem('echo_community_query', JSON.stringify({
       display: `Tell me more about ${exploreLabel}`,
-      agent:   `${marker} Tell me more about ${exploreLabel}`,
+      agent:   `${marker} Tell me more about ${exploreLabel}${idPart}`,
     }))
     navigate('/chat')
   }
@@ -751,7 +759,7 @@ export default function CommunityPage() {
               />
             )}
             {insights.slice(0, 3).map((item, i) => (
-              <div key={item.title} onClick={() => handleInsight(item.title)} style={{ cursor: 'pointer' }}>
+              <div key={item.title} onClick={() => handleInsight(item.title, item.id)} style={{ cursor: 'pointer' }}>
                 <ActivityCard item={item} index={i} blockIndex={i} isSelected={selectedInsight === item.title} />
               </div>
             ))}

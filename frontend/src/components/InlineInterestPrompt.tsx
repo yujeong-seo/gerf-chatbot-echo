@@ -78,7 +78,7 @@ export default function InlineInterestPrompt({ threadId }: Props) {
     setSavedInterests(currentInterests)
     setHasSaved(true)
     setSaveState('saved')
-    setTimeout(() => setSaveState('idle'), 2500)
+    setTimeout(() => setSaveState('idle'), 2000)
   }
 
   const count = currentInterests.length

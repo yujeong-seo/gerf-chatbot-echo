@@ -102,3 +102,32 @@ def event_url_tool(query: str) -> str:
         return f"No website URL available for '{row['title']}'."
 
     return f"[View {row['title']} on the festival website]({url})"
+
+
+@tool
+def get_event_by_id(event_id: str) -> str:
+    """Retrieve full details for a specific GERF 2026 event by its exact event_id.
+
+    Use this tool when the user's message contains an explicit event_id (e.g.
+    'event_id:family-stage-2026'). Always prefer this over search_events when
+    an event_id is provided — it guarantees the correct event is returned.
+    Input: the exact event_id slug (e.g. "family-stage-2026").
+    """
+    conn = sqlite3.connect(str(_DB_FILE))
+    conn.row_factory = sqlite3.Row
+    row = conn.execute(
+        "SELECT title, venue_name, time, short_description, "
+        "experience_type, registration_type, booking_url "
+        "FROM events WHERE event_id = ? LIMIT 1",
+        (event_id,),
+    ).fetchone()
+    conn.close()
+    if not row:
+        return f"No event found with event_id '{event_id}'."
+    parts = [f"**{row['title']}**"]
+    if row["venue_name"]:        parts.append(f"Venue: {row['venue_name']}")
+    if row["time"]:              parts.append(f"Time: {row['time']}")
+    if row["short_description"]: parts.append(row["short_description"])
+    if row["experience_type"]:   parts.append(f"Type: {row['experience_type']}")
+    if row["registration_type"]: parts.append(f"Booking: {row['registration_type']}")
+    return "\n".join(parts)

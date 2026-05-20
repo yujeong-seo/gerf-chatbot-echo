@@ -26,7 +26,7 @@ from langchain_openai import ChatOpenAI
 from .tools         import build_faq_tool
 from .datetime_tool import current_datetime_tool
 from .calendar_tool import create_calendar_event
-from .location_tool import maps_url_tool, event_url_tool
+from .location_tool import maps_url_tool, event_url_tool, get_event_by_id
 from .interests     import (
     get_user_interests_tool,
     build_interests_context,
@@ -140,6 +140,7 @@ def _build_agent():
         create_calendar_event,
         maps_url_tool,
         event_url_tool,
+        get_event_by_id,
         get_user_interests_tool,
     ]
 
@@ -176,6 +177,7 @@ def get_agent():
 def run_agent(
     query:         str,
     thread_id:     str            = "",
+    username:      str            = "",
     _chat_history: Optional[list] = None,
 ) -> tuple[str, list[dict]]:
     """Run a user query and return (raw_output_json, tool_calls).
@@ -189,6 +191,9 @@ def run_agent(
     one entry per tool invocation within this turn.
     """
     parts: list[str] = []
+
+    if username:
+        parts.append(f"[Visitor name: {username}]\n")
 
     if thread_id:
         interests_ctx = build_interests_context(thread_id)

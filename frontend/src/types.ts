@@ -1,7 +1,7 @@
 export interface Keyword {
   id: string
   text: string
-  weight: 1 | 2 | 3 | 4 | 5   // 5 = most popular
+  weight: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10   // 10 = most popular
 }
 
 // ── Inline UI card types ──────────────────────────────────────────────────
@@ -62,6 +62,7 @@ export interface Interest {
 }
 
 export interface InsightItem {
+  id?:         string
   title:       string
   venue:       string
   time:        string

@@ -307,6 +307,7 @@ def chat(req: ChatRequest):
                 req.thread_id,
                 req.message,
                 interaction_stage=req.visit_type or None,
+                username=req.username or "",
             )
         except Exception as exc:
             raise HTTPException(status_code=500, detail=str(exc))
@@ -319,7 +320,7 @@ def chat(req: ChatRequest):
 
     # ── Main agent ────────────────────────────────────────────────────────────
     try:
-        raw, tool_calls = run_agent(req.message, thread_id=req.thread_id)
+        raw, tool_calls = run_agent(req.message, thread_id=req.thread_id, username=req.username or "")
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
@@ -644,7 +645,7 @@ def _compute_trending() -> dict:
     insights = []
     for activity, count in top_activities:
         row = conn.execute(
-            "SELECT title, venue_name, time, experience_type, audience_tags"
+            "SELECT event_id, title, venue_name, time, experience_type, audience_tags"
             " FROM events WHERE lower(title) = lower(?) LIMIT 1",
             (activity,),
         ).fetchone()
@@ -654,9 +655,10 @@ def _compute_trending() -> dict:
                 tags.append(row["experience_type"])
             tags.extend(_parse_audience_tags(row["audience_tags"])[:2])
         insights.append({
-            "title": row["title"]    if row else activity,
+            "id":    row["event_id"]   if row else None,
+            "title": row["title"]      if row else activity,
             "venue": row["venue_name"] if row else "",
-            "time":  row["time"]     if row else "",
+            "time":  row["time"]       if row else "",
             "count": count,
             "tags":  tags,
         })
@@ -665,7 +667,7 @@ def _compute_trending() -> dict:
     if len(insights) < 3:
         existing_titles = {ins["title"] for ins in insights}
         placeholders = conn.execute(
-            "SELECT title, venue_name, time, experience_type, audience_tags"
+            "SELECT event_id, title, venue_name, time, experience_type, audience_tags"
             " FROM events WHERE title NOT IN ({}) ORDER BY RANDOM() LIMIT ?".format(
                 ",".join("?" * len(existing_titles)) if existing_titles else "''"
             ),
@@ -677,9 +679,10 @@ def _compute_trending() -> dict:
                 tags.append(p["experience_type"])
             tags.extend(_parse_audience_tags(p["audience_tags"])[:2])
             insights.append({
-                "title": p["title"]    or "",
+                "id":    p["event_id"]   or None,
+                "title": p["title"]      or "",
                 "venue": p["venue_name"] or "",
-                "time":  p["time"]     or "",
+                "time":  p["time"]       or "",
                 "count": 0,
                 "tags":  tags,
             })

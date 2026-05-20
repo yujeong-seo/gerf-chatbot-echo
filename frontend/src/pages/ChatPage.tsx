@@ -371,7 +371,7 @@ export default function ChatPage({ messages, setMessages, threadId }: Props) {
                 color:         'var(--stone-500)',
                 margin:        '0 0 4px',
               }}>
-                {userName ? `Hi ${userName},` : 'Hi there,'}
+                {userName ? `Hi ${userName},` : 'Hi, I am ECHO'}
               </p>
               <p style={{
                 fontFamily:    'var(--font-accent)',
