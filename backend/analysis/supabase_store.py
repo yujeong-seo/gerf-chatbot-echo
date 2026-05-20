@@ -99,7 +99,7 @@ def save_test_session_profile(
     last_at:    str | None,
     username:   str,
     turn_count: int,
-    tool_calls: list[dict],
+    droppoint:  str,
 ) -> None:
     """Upsert a test session profile row to test_session_profiles."""
     prefs = profile.get("engagement_preferences") or {}
@@ -117,7 +117,7 @@ def save_test_session_profile(
         "last_interaction_at": last_at,
         "username":            username,
         "turn":                turn_count,
-        "tool":                tool_calls,
+        "droppoint":           droppoint,
     }
     _client().table("test_session_profiles").upsert(row).execute()
 

@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 interface Props {
   gcal_url:    string
   ics_url:     string
@@ -60,6 +62,41 @@ const _DATE_LABELS: Record<string, string> = {
 }
 
 export default function InlineCalendarCard({ gcal_url, ics_url, title, location, date_label, time_label }: Props) {
+  const [state, setState] = useState<'prompt' | 'expanded' | 'dismissed'>('prompt')
+
+  if (state === 'dismissed') return null
+
+  if (state === 'prompt') {
+    return (
+      <div
+        className="w-full bg-white rounded-[18px] border border-[rgba(34,36,34,0.07)] px-4 py-3"
+        style={{ boxShadow: 'var(--sh-bubble)' }}
+      >
+        <p className="m-0 mb-0.5 text-echo-900 truncate"
+          style={{ fontWeight: 600, fontSize: 14, lineHeight: 1.3 }}>
+          {title}
+        </p>
+        <p className="m-0 mb-3 t-small" style={{ color: 'var(--echo-500)' }}>
+          Add this to your calendar?
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setState('expanded')}
+            className="flex-1 btn btn-primary btn-sm flex items-center justify-center gap-1.5"
+          >
+            Add to calendar
+          </button>
+          <button
+            onClick={() => setState('dismissed')}
+            className="btn btn-light btn-sm px-4"
+          >
+            Not now
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   const dateStr = date_label ? (_DATE_LABELS[date_label] ?? date_label) : null
   const timeStr = time_label ?? null
   const whenStr = [dateStr, timeStr].filter(Boolean).join(', ')

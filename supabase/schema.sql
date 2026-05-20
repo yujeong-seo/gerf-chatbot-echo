@@ -79,11 +79,12 @@ CREATE TABLE IF NOT EXISTS session_feedback (
 -- =============================================================================
 -- SECTION 2: TRENDING CACHE (RUN THIS — new table)
 -- Replaces the SQLite trending_cache table that was lost on each Railway restart.
--- Only ever contains one row (id = 1). Upserted every 30 minutes by api.py.
+-- Appended once per hour at XX:30 UTC by the background refresh loop in api.py.
+-- Each refresh inserts a new row; read path queries ORDER BY cached_at DESC LIMIT 1.
 -- =============================================================================
 
 CREATE TABLE IF NOT EXISTS trending_cache (
-    id          INTEGER PRIMARY KEY CHECK (id = 1),
+    id          BIGSERIAL PRIMARY KEY,
     popular_now JSONB    NOT NULL DEFAULT '[]',
     insights    JSONB    NOT NULL DEFAULT '[]',
     live        JSONB,                               -- null or single event object
@@ -179,5 +180,5 @@ CREATE TABLE IF NOT EXISTS test_session_profiles (
     last_interaction_at  TEXT,
     username             TEXT,        -- echo_name provided at entry (required in test mode)
     turn                 INTEGER,     -- number of user turns in the session
-    tool                 JSONB        -- e.g. [{"tool":"search_events","input":"dance"}]
+    droppoint            TEXT         -- last agent output type: overview | location | detail | calendar | faq | schedule | feedback
 );

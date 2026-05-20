@@ -18,8 +18,8 @@ from backend.agent.location_tool import get_maps_url, get_event_url
 
 _SESSIONS_DB = Path(__file__).parent / "rag" / "gerf_sessions.db"
 _EVENTS_DB   = Path(__file__).parent / "rag" / "gerf_2026.db"
-_SESSION_TIMEOUT_MINUTES = 60
-_CHECK_INTERVAL_SECONDS  = 300
+_SESSION_TIMEOUT_MINUTES = 20
+_CHECK_INTERVAL_SECONDS  = 120
 
 
 def _find_expired_sessions() -> list[str]:
@@ -51,6 +51,21 @@ async def _session_expiry_loop() -> None:
                 parse_session(thread_id)
 
 
+async def _trending_refresh_loop() -> None:
+    """Refresh the trending cache at every XX:00 and XX:30 UTC, regardless of traffic."""
+    while True:
+        now    = _dt.now(_tz.utc)
+        minute = now.minute
+        second = now.second
+        # Next :30 if before it, else next :00 (top of hour)
+        wait   = ((30 - minute) * 60 - second) if minute < 30 else ((60 - minute) * 60 - second)
+        await asyncio.sleep(wait)
+        loop   = asyncio.get_event_loop()
+        result = await loop.run_in_executor(None, _compute_trending)
+        _set_mem_cache(result)
+        _set_trending_cache_sb(result["popular_now"], result["insights"], result["live"])
+
+
 def _prewarm_trending() -> None:
     """Populate in-memory + Supabase cache on startup so first request is fast."""
     cached = _get_trending_cache_sb()
@@ -66,9 +81,11 @@ def _prewarm_trending() -> None:
 async def lifespan(app: FastAPI):
     loop = asyncio.get_event_loop()
     loop.run_in_executor(None, _prewarm_trending)
-    task = asyncio.create_task(_session_expiry_loop())
+    expiry_task   = asyncio.create_task(_session_expiry_loop())
+    trending_task = asyncio.create_task(_trending_refresh_loop())
     yield
-    task.cancel()
+    expiry_task.cancel()
+    trending_task.cancel()
 
 
 app = FastAPI(title="GERF Agent API", lifespan=lifespan)
@@ -136,24 +153,32 @@ class ParseSessionRequest(BaseModel):
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _upsert_test_meta(thread_id: str, username: str) -> None:
+_TOOL_DROPPOINT: dict[str, str] = {
+    "search_events":         "overview",
+    "maps_url_tool":         "location",
+    "event_url_tool":        "detail",
+    "create_calendar_event": "calendar",
+    "gerf_faq":              "faq",
+    "current_datetime_tool": "schedule",
+}
+_INTERNAL_TOOLS = {"get_user_interests_tool"}
+
+
+def _derive_droppoint(tool_calls: list[dict]) -> str:
+    for tc in reversed(tool_calls):
+        name = tc.get("tool", "")
+        if name in _INTERNAL_TOOLS:
+            continue
+        return _TOOL_DROPPOINT.get(name, "overview")
+    return "overview"
+
+
+def _upsert_test_meta(thread_id: str, username: str, droppoint: str) -> None:
     conn = sqlite3.connect(str(_SESSIONS_DB))
     conn.execute(
-        "INSERT INTO test_session_meta (thread_id, username) VALUES (?, ?) "
-        "ON CONFLICT(thread_id) DO UPDATE SET username=excluded.username",
-        (thread_id, username),
-    )
-    conn.commit()
-    conn.close()
-
-
-def _save_tool_calls(thread_id: str, tool_calls: list[dict]) -> None:
-    if not tool_calls:
-        return
-    conn = sqlite3.connect(str(_SESSIONS_DB))
-    conn.executemany(
-        "INSERT INTO session_tools (thread_id, tool_name, tool_input) VALUES (?, ?, ?)",
-        [(thread_id, tc["tool"], tc["input"]) for tc in tool_calls],
+        "INSERT INTO test_session_meta (thread_id, username, droppoint) VALUES (?, ?, ?) "
+        "ON CONFLICT(thread_id) DO UPDATE SET username=excluded.username, droppoint=excluded.droppoint",
+        (thread_id, username, droppoint),
     )
     conn.commit()
     conn.close()
@@ -288,6 +313,8 @@ def chat(req: ChatRequest):
 
         # None means off-topic exit — fall through to main agent below
         if feedback_reply is not None:
+            if req.visit_type == "test" and req.thread_id:
+                _upsert_test_meta(req.thread_id, req.username, "feedback")
             return ChatResponse(content=feedback_reply, is_feedback=True)
 
     # ── Main agent ────────────────────────────────────────────────────────────
@@ -297,8 +324,7 @@ def chat(req: ChatRequest):
         raise HTTPException(status_code=500, detail=str(exc))
 
     if req.visit_type == "test" and req.thread_id:
-        _upsert_test_meta(req.thread_id, req.username)
-        _save_tool_calls(req.thread_id, tool_calls)
+        _upsert_test_meta(req.thread_id, req.username, _derive_droppoint(tool_calls))
 
     try:
         parsed   = json.loads(raw)
@@ -370,7 +396,7 @@ from collections import Counter as _Counter
 from datetime import datetime as _dt, timezone as _tz
 from zoneinfo import ZoneInfo as _ZoneInfo
 
-_TRENDING_TTL = 1800  # 30 minutes
+_TRENDING_TTL = 3600  # 60 min — safety fallback; background loop refreshes at XX:00 and XX:30
 
 # Layer 1: in-process memory cache (sub-ms, lost on restart)
 _mem_cache: dict | None = None
@@ -397,7 +423,7 @@ def _get_trending_cache_sb() -> dict | None:
         sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
         rows = sb.table("trending_cache").select(
             "popular_now,insights,live,cached_at"
-        ).eq("id", 1).execute().data
+        ).order("cached_at", desc=True).limit(1).execute().data
         if not rows:
             return None
         row = rows[0]
@@ -418,8 +444,7 @@ def _set_trending_cache_sb(popular_now: list, insights: list, live: dict | None)
     try:
         from supabase import create_client
         sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
-        sb.table("trending_cache").upsert({
-            "id":          1,
+        sb.table("trending_cache").insert({
             "popular_now": popular_now,
             "insights":    insights,
             "live":        live,

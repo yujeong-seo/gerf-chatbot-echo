@@ -12,6 +12,12 @@ function RootRoute() {
     : <EntryPage />
 }
 
+function GuardedRoute({ element }: { element: JSX.Element }) {
+  return sessionStorage.getItem('echo_onboarded')
+    ? element
+    : <Navigate to="/" replace />
+}
+
 export default function App() {
   // Lifted here so chat survives tab navigation
   const [chatMessages, setChatMessages] = useState<Message[]>([])
@@ -21,15 +27,15 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/"          element={<RootRoute />} />
-        <Route path="/community" element={<CommunityPage />} />
-        <Route path="/chat"      element={
+        <Route path="/community" element={<GuardedRoute element={<CommunityPage />} />} />
+        <Route path="/chat"      element={<GuardedRoute element={
           <ChatPage
             messages={chatMessages}
             setMessages={setChatMessages}
             threadId={chatThreadId.current}
           />
-        } />
-        <Route path="/user"      element={<UserPage threadId={chatThreadId.current} />} />
+        } />} />
+        <Route path="/user"      element={<GuardedRoute element={<UserPage threadId={chatThreadId.current} />} />} />
       </Routes>
     </BrowserRouter>
   )

@@ -75,17 +75,17 @@ def _conn() -> sqlite3.Connection:
         CREATE TABLE IF NOT EXISTS test_session_meta (
             thread_id  TEXT PRIMARY KEY,
             username   TEXT NOT NULL DEFAULT '',
-            created_at TEXT DEFAULT (datetime('now'))
-        );
-        CREATE TABLE IF NOT EXISTS session_tools (
-            id         INTEGER PRIMARY KEY AUTOINCREMENT,
-            thread_id  TEXT NOT NULL,
-            tool_name  TEXT NOT NULL,
-            tool_input TEXT NOT NULL DEFAULT '',
+            droppoint  TEXT,
             created_at TEXT DEFAULT (datetime('now'))
         );
     """)
     conn.commit()
+    # Migrate existing DBs: add droppoint column if absent
+    try:
+        conn.execute("ALTER TABLE test_session_meta ADD COLUMN droppoint TEXT")
+        conn.commit()
+    except Exception:
+        pass
     return conn
 
 

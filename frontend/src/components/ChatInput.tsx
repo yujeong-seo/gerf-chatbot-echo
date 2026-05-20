@@ -11,18 +11,18 @@ interface Props {
 // Inline SVG matching audio.svg bar layout; animates when active
 function AudioBarsIcon({ active }: { active: boolean }) {
   const bars = [
-    { x: 4,  delay: '0s'    },
-    { x: 8,  delay: '0.15s' },
-    { x: 12, delay: '0.05s' },
-    { x: 16, delay: '0.2s'  },
-    { x: 20, delay: '0.1s'  },
+    { x: 4,  y1: 9, y2: 15, delay: '0s'    },
+    { x: 8,  y1: 4, y2: 20, delay: '0.15s' },
+    { x: 12, y1: 9, y2: 15, delay: '0.05s' },
+    { x: 16, y1: 6, y2: 18, delay: '0.2s'  },
+    { x: 20, y1: 9, y2: 15, delay: '0.1s'  },
   ]
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
       {bars.map(bar => (
         <line
           key={bar.x}
-          x1={bar.x} y1={4} x2={bar.x} y2={20}
+          x1={bar.x} y1={active ? 4 : bar.y1} x2={bar.x} y2={active ? 20 : bar.y2}
           stroke={active ? '#FFFFFF' : 'currentColor'}
           strokeWidth="2"
           strokeLinecap="round"

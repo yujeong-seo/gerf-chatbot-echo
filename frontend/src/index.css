@@ -359,6 +359,11 @@ body {
   100% { color: var(--stone-500); }
 }
 
+/* ── Mobile: prevent iOS textarea zoom (font-size < 16px triggers zoom) ──── */
+@media (hover: none) and (pointer: coarse) {
+  textarea { font-size: 16px; }
+}
+
 /* ── Audio waveform bars ─────────────────────────────────────────────────── */
 @keyframes audio-bar {
   0%, 100% { transform: scaleY(0.25); }

@@ -56,7 +56,6 @@ def _delete_session_logs(thread_id: str) -> None:
     conn.execute("DELETE FROM conversation_history WHERE thread_id = ?", (thread_id,))
     conn.execute("DELETE FROM user_interests       WHERE thread_id = ?", (thread_id,))
     conn.execute("DELETE FROM test_session_meta    WHERE thread_id = ?", (thread_id,))
-    conn.execute("DELETE FROM session_tools        WHERE thread_id = ?", (thread_id,))
     conn.commit()
     conn.close()
 
@@ -65,18 +64,14 @@ def _load_test_meta(thread_id: str) -> dict | None:
     """Return test session metadata if this is a test session, else None."""
     conn = sqlite3.connect(str(_DB_FILE))
     row = conn.execute(
-        "SELECT username FROM test_session_meta WHERE thread_id = ?", (thread_id,)
+        "SELECT username, droppoint FROM test_session_meta WHERE thread_id = ?", (thread_id,)
     ).fetchone()
-    tool_rows = conn.execute(
-        "SELECT tool_name, tool_input FROM session_tools WHERE thread_id = ? ORDER BY id",
-        (thread_id,),
-    ).fetchall()
     conn.close()
     if row is None:
         return None
     return {
-        "username":   row[0],
-        "tool_calls": [{"tool": r[0], "input": r[1]} for r in tool_rows],
+        "username":  row[0],
+        "droppoint": row[1] or "overview",
     }
 
 
@@ -122,7 +117,7 @@ def parse_session(thread_id: str, crm_data: dict | None = None) -> dict:
                 thread_id, session_profile, sentiment, started_at, last_at,
                 username=test_meta["username"],
                 turn_count=len(user_messages),
-                tool_calls=test_meta["tool_calls"],
+                droppoint=test_meta["droppoint"],
             )
         else:
             save_session_profile(thread_id, session_profile, sentiment, started_at, last_at)

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Chip from './Chip'
 import { INTEREST_OPTIONS, STORAGE_KEY } from './InterestTags'
 import { savePreferences } from '../api'
@@ -28,8 +28,21 @@ export default function InlineInterestPrompt({ threadId }: Props) {
     JSON.stringify([...currentInterests].sort()) !==
     JSON.stringify([...savedInterests].sort())
 
-  // Show button row unless: user has saved once AND no pending changes
-  const showButtons = !hasSaved || isDirty
+  // Show button row unless: user has saved once AND no pending changes AND not showing confirmation
+  const showButtons = !hasSaved || isDirty || saveState === 'saved'
+
+  // Debounce the expand direction: delay 200ms after save so rapid select/deselect
+  // doesn't briefly flash the button row. Hide immediately when showButtons goes false.
+  const [visibleButtons, setVisibleButtons] = useState(() => !hasSaved || isDirty)
+  useEffect(() => {
+    if (!showButtons) {
+      setVisibleButtons(false)
+      return
+    }
+    const delay = hasSaved ? 200 : 0
+    const t = setTimeout(() => setVisibleButtons(true), delay)
+    return () => clearTimeout(t)
+  }, [showButtons, hasSaved])
 
   function triggerToast() {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
@@ -65,7 +78,7 @@ export default function InlineInterestPrompt({ threadId }: Props) {
     setSavedInterests(currentInterests)
     setHasSaved(true)
     setSaveState('saved')
-    setTimeout(() => setSaveState('idle'), 2000)
+    setTimeout(() => setSaveState('idle'), 2500)
   }
 
   const count = currentInterests.length
@@ -113,9 +126,9 @@ export default function InlineInterestPrompt({ threadId }: Props) {
       {/* Button row — animated height collapse using grid-template-rows */}
       <div style={{
         display: 'grid',
-        gridTemplateRows: showButtons ? '1fr' : '0fr',
-        opacity: showButtons ? 1 : 0,
-        transition: showButtons
+        gridTemplateRows: visibleButtons ? '1fr' : '0fr',
+        opacity: visibleButtons ? 1 : 0,
+        transition: visibleButtons
           ? 'grid-template-rows 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease'
           : 'grid-template-rows 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.1s, opacity 0.45s ease 0.05s',
       }}>
