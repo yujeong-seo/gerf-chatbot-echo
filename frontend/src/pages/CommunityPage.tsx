@@ -623,11 +623,17 @@ export default function CommunityPage() {
 
   function handleExplore() {
     if (!exploreLabel) return
-    const marker  = selectedKw ? '<<P>>' : '<<C>>'
-    const idPart  = selectedInsightId ? ` event_id:${selectedInsightId}` : ''
+    let agentMsg: string
+    if (selectedKw) {
+      // Keyword bubble — thematic search, not a named event
+      agentMsg = `<<P>> Show me events related to ${exploreLabel}`
+    } else {
+      // Popular activity — exact event, use the id for direct lookup
+      agentMsg = `<<C>> Tell me more about this event. event_id:${selectedInsightId}`
+    }
     sessionStorage.setItem('echo_community_query', JSON.stringify({
       display: `Tell me more about ${exploreLabel}`,
-      agent:   `${marker} Tell me more about ${exploreLabel}${idPart}`,
+      agent:   agentMsg,
     }))
     navigate('/chat')
   }

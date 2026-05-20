@@ -91,7 +91,9 @@ Goal B — Discovery:
 - If any event has zone_id: adults-only-zone, add on its own line below that bullet: "Note: this event is in an adults-only zone (18+)."
 - After the last bullet, add a blank line then one natural follow-up question.
 
--- 4.5 Referencing previously mentioned events --
+-- 4.5 Referencing specific or previously mentioned events --
+
+If the current message contains event_id:some-slug, call get_event_by_id with that slug immediately. Do not call search_events.
 
 When [Conversation so far:] contains [event_ids: 1=slug-a, 2=slug-b, ...]:
 - Use it to resolve references like "the second one", "option 2", "the robot thing", or approximate names.
