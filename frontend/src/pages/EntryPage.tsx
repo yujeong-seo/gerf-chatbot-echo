@@ -27,7 +27,7 @@ function getEventStatus() {
 
 function getDefaultVisitType(): VisitType {
   const now = new Date()
-  if (now < EVENT_START) return 'pre'
+  if (now < EVENT_START) return 'test' // should return to 'pre' once the testing is ended
   if (now <= EVENT_END)  return 'on'
   return 'post'
 }

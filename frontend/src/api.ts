@@ -43,16 +43,17 @@ export async function fetchTrending(): Promise<{ popular_now: Keyword[]; insight
 // ── Chat ──────────────────────────────────────────────────────────────────
 
 export interface ChatApiResponse {
-  content:          string
-  keywords:         string[]
-  calendar?:        InlineCalendar | null
-  location_url?:    string | null
-  location_name?:   string | null
-  location_venue?:  string | null
-  event_url?:       string | null
-  event_name?:      string | null
-  booking?:         { url: string; title: string; subtitle: string; is_free: boolean; arrival_notes?: string | null } | null
-  is_feedback?:     boolean
+  content:            string
+  keywords:           string[]
+  calendar?:          InlineCalendar | null
+  location_url?:      string | null
+  location_name?:     string | null
+  location_venue?:    string | null
+  event_url?:         string | null
+  event_name?:        string | null
+  booking?:           { url: string; title: string; subtitle: string; is_free: boolean; arrival_notes?: string | null } | null
+  is_feedback?:       boolean
+  suggest_interests?: boolean
 }
 
 export async function sendChatMessage(
@@ -65,11 +66,12 @@ export async function sendChatMessage(
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify({
-      message:          content,
-      thread_id:        threadId,
-      feedback_trigger: options?.feedbackTrigger ?? false,
-      visit_type:       visitType,
-      username:         sessionStorage.getItem('echo_name') ?? '',
+      message:           content,
+      thread_id:         threadId,
+      feedback_trigger:  options?.feedbackTrigger ?? false,
+      visit_type:        visitType,
+      username:          sessionStorage.getItem('echo_name') ?? '',
+      interests_prompted: sessionStorage.getItem('echo_interest_prompt_shown') === '1',
     }),
   })
   if (!res.ok) throw new Error(`Chat API error: ${res.status}`)
