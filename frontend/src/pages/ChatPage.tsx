@@ -229,7 +229,6 @@ export default function ChatPage({ messages, setMessages, threadId }: Props) {
     agentContent?: string,
     opts?: { feedbackTrigger?: boolean },
   ) {
-    const isFirstMainAssistant = !messages.some(m => m.role === 'assistant' && !m.isFeedback)
     setInputValue('')
     setOptionsOpen(false)
     setMessages(prev => [...prev, {
@@ -257,9 +256,13 @@ export default function ChatPage({ messages, setMessages, threadId }: Props) {
         inline = { type: 'location', url: res.location_url, name: res.location_name ?? '' }
       }
 
-      if (!inline && isFirstMainAssistant && !res.is_feedback && !sessionStorage.getItem('echo_interest_prompt_shown')) {
-        inline = { type: 'interest', threadId }
-        sessionStorage.setItem('echo_interest_prompt_shown', '1')
+      if (!inline && res.suggest_interests && !res.is_feedback && !sessionStorage.getItem('echo_interest_prompt_shown')) {
+        const stored = sessionStorage.getItem('echo_interests')
+        const hasInterests = stored ? (JSON.parse(stored) as string[]).length > 0 : false
+        if (!hasInterests) {
+          inline = { type: 'interest', threadId }
+          sessionStorage.setItem('echo_interest_prompt_shown', '1')
+        }
       }
 
       setMessages(prev => [...prev, {

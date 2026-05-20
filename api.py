@@ -103,11 +103,12 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 
 class ChatRequest(BaseModel):
-    message:          str
-    thread_id:        str  = ""
-    feedback_trigger: bool = False
-    visit_type:       str  = ""
-    username:         str  = ""
+    message:            str
+    thread_id:          str  = ""
+    feedback_trigger:   bool = False
+    visit_type:         str  = ""
+    username:           str  = ""
+    interests_prompted: bool = False
 
 
 class CalendarCard(BaseModel):
@@ -128,16 +129,17 @@ class BookingCard(BaseModel):
 
 
 class ChatResponse(BaseModel):
-    content:         str
-    keywords:        list[str] = []
-    calendar:        CalendarCard | None = None
-    location_url:    str | None = None
-    location_name:   str | None = None
-    location_venue:  str | None = None
-    event_url:       str | None = None
-    event_name:      str | None = None
-    booking:         BookingCard | None = None
-    is_feedback:     bool = False
+    content:           str
+    keywords:          list[str] = []
+    calendar:          CalendarCard | None = None
+    location_url:      str | None = None
+    location_name:     str | None = None
+    location_venue:    str | None = None
+    event_url:         str | None = None
+    event_name:        str | None = None
+    booking:           BookingCard | None = None
+    is_feedback:       bool = False
+    suggest_interests: bool = False
 
 
 class PreferencesRequest(BaseModel):
@@ -320,7 +322,7 @@ def chat(req: ChatRequest):
 
     # ── Main agent ────────────────────────────────────────────────────────────
     try:
-        raw, tool_calls = run_agent(req.message, thread_id=req.thread_id, username=req.username or "")
+        raw, tool_calls = run_agent(req.message, thread_id=req.thread_id, username=req.username or "", interests_prompted=req.interests_prompted)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
@@ -328,13 +330,15 @@ def chat(req: ChatRequest):
         _upsert_test_meta(req.thread_id, req.username, _derive_droppoint(tool_calls))
 
     try:
-        parsed   = json.loads(raw)
-        content  = str(parsed.get("response", raw))
-        keywords = [str(k) for k in parsed.get("keywords", []) if isinstance(k, str)]
+        parsed            = json.loads(raw)
+        content           = str(parsed.get("response", raw))
+        keywords          = [str(k) for k in parsed.get("keywords", []) if isinstance(k, str)]
+        suggest_interests = bool(parsed.get("suggest_interests", False))
     except (json.JSONDecodeError, AttributeError, TypeError):
-        content  = raw
-        keywords = []
-        parsed   = {}
+        content           = raw
+        keywords          = []
+        parsed            = {}
+        suggest_interests = False
 
     calendar, location_url, location_name, location_venue, event_url, event_name, booking = _build_inline(parsed)
 
@@ -367,6 +371,7 @@ def chat(req: ChatRequest):
         event_url=event_url,
         event_name=event_name,
         booking=booking,
+        suggest_interests=suggest_interests,
     )
 
 

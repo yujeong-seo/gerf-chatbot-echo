@@ -97,6 +97,8 @@ Observation: the result of the action
 (Repeat Thought / Action / Action Input / Observation as needed)
 Thought: I now know the final answer
 Final Answer: {{"response": "your message", "keywords": ["kw1"]}}
+(When recommending specific events, also include: "mentioned_events": [{{"n": 1, "id": "event-id-slug"}}, ...])
+(When the response is a broad discovery or recommendation — i.e. you called search_events for general browsing — also include: "suggest_interests": true)
 
 Rules:
 - If no tool is needed, go directly from Thought to Final Answer — omit Action/Action Input.
@@ -175,10 +177,11 @@ def get_agent():
 # ---------------------------------------------------------------------------
 
 def run_agent(
-    query:         str,
-    thread_id:     str            = "",
-    username:      str            = "",
-    _chat_history: Optional[list] = None,
+    query:              str,
+    thread_id:          str            = "",
+    username:           str            = "",
+    interests_prompted: bool           = False,
+    _chat_history:      Optional[list] = None,
 ) -> tuple[str, list[dict]]:
     """Run a user query and return (raw_output_json, tool_calls).
 
@@ -194,6 +197,9 @@ def run_agent(
 
     if username:
         parts.append(f"[Visitor name: {username}]\n")
+
+    if interests_prompted:
+        parts.append("[Interests already prompted]\n")
 
     if thread_id:
         interests_ctx = build_interests_context(thread_id)
@@ -223,8 +229,22 @@ def run_agent(
         try:
             parsed = json.loads(output)
             response_text = parsed.get("response", output)
+            mentioned = parsed.get("mentioned_events", [])
         except (json.JSONDecodeError, AttributeError):
             response_text = output
-        save_message(thread_id, "assistant", response_text)
+            mentioned = []
+
+        # Prepend compact event-ID annotation so the next turn can resolve references
+        if mentioned:
+            pairs = ", ".join(
+                f"{m['n']}={m['id']}"
+                for m in mentioned
+                if isinstance(m, dict) and "n" in m and "id" in m
+            )
+            history_text = f"[event_ids: {pairs}] {response_text}"
+        else:
+            history_text = response_text
+
+        save_message(thread_id, "assistant", history_text)
 
     return output, tool_calls
