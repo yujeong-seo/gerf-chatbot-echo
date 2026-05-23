@@ -133,7 +133,7 @@ def _build_agent():
         template=system_escaped + _REACT_SUFFIX,
     )
 
-    llm = ChatOpenAI(model="gpt-4o", temperature=0)
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
     all_tools = [
         search_events,

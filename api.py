@@ -81,11 +81,11 @@ def _prewarm_trending() -> None:
 async def lifespan(app: FastAPI):
     loop = asyncio.get_event_loop()
     loop.run_in_executor(None, _prewarm_trending)
-    expiry_task   = asyncio.create_task(_session_expiry_loop())
-    trending_task = asyncio.create_task(_trending_refresh_loop())
+    expiry_task = asyncio.create_task(_session_expiry_loop())
+    # trending_task = asyncio.create_task(_trending_refresh_loop())  # paused — re-enable when live
     yield
     expiry_task.cancel()
-    trending_task.cancel()
+    # trending_task.cancel()
 
 
 app = FastAPI(title="GERF Agent API", lifespan=lifespan)

@@ -71,6 +71,14 @@ export interface InsightItem {
   tags:        string[]
 }
 
+export interface LiveEvent {
+  title:       string
+  event_id:    string
+  venue?:      string
+  time_start?: string
+  time_end?:   string
+}
+
 export type EventPhase = 'before' | 'live' | 'after'
 
 export interface EventStatus {

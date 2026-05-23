@@ -5,7 +5,7 @@ import PageShell from '../components/PageShell'
 import AppHeader, { getVisitStatus } from '../components/AppHeader'
 import { fetchTrending } from '../api'
 import { EVENT_START } from '../constants'
-import type { Keyword, InsightItem } from '../types'
+import type { Keyword, InsightItem, LiveEvent } from '../types'
 
 // ── Bubble palette (design.md §8) ─────────────────────────────────────────
 
@@ -563,9 +563,10 @@ function SectionHeading({ eyebrow, title, right }: { eyebrow: string; title: str
 export default function CommunityPage() {
   const navigate = useNavigate()
 
-  const [keywords,        setKeywords]        = useState<Keyword[]>([])
-  const [insights,        setInsights]        = useState<InsightItem[]>([])
-  const [selectedKwId,    setSelectedKwId]    = useState<string | null>(null)
+  const [keywords,          setKeywords]          = useState<Keyword[]>([])
+  const [insights,          setInsights]          = useState<InsightItem[]>([])
+  const [liveEvent,         setLiveEvent]         = useState<LiveEvent | null>(null)
+  const [selectedKwId,      setSelectedKwId]      = useState<string | null>(null)
   const [selectedInsight,   setSelectedInsight]   = useState<string | null>(null)
   const [selectedInsightId, setSelectedInsightId] = useState<string | null>(null)
   const [expanded,          setExpanded]          = useState(false)
@@ -581,9 +582,10 @@ export default function CommunityPage() {
       setInsights(TEST_ACTIVITIES)
       return
     }
-    fetchTrending().then(({ popular_now, insights: ins }) => {
+    fetchTrending().then(({ popular_now, insights: ins, live }) => {
       setKeywords(popular_now.length ? popular_now : generateFallbackKeywords())
       setInsights(ins)
+      setLiveEvent(live)
     })
   }, [])
 
@@ -623,16 +625,23 @@ export default function CommunityPage() {
 
   function handleExplore() {
     if (!exploreLabel) return
-    const marker  = selectedKw ? '<<P>>' : '<<C>>'
-    const idPart  = selectedInsightId ? ` event_id:${selectedInsightId}` : ''
+    let agentMsg: string
+    if (selectedKw) {
+      // Keyword bubble — thematic search, not a named event
+      agentMsg = `<<P>> Show me events related to ${exploreLabel}`
+    } else {
+      // Popular activity — exact event, use the id for direct lookup
+      agentMsg = `<<C>> Tell me more about this event. event_id:${selectedInsightId}`
+    }
     sessionStorage.setItem('echo_community_query', JSON.stringify({
       display: `Tell me more about ${exploreLabel}`,
-      agent:   `${marker} Tell me more about ${exploreLabel}${idPart}`,
+      agent:   agentMsg,
     }))
     navigate('/chat')
   }
 
-  const liveText: string | null = isTestMode ? LIVE_TEXT_TEST : null
+  const liveText: string | null = isTestMode ? LIVE_TEXT_TEST : (liveEvent?.title ?? null)
+  const liveId:   string | null = isTestMode ? 'moving-through-time-a-dance-experiment' : (liveEvent?.event_id ?? null)
 
   const SECTION_PY = 30
 
@@ -755,7 +764,7 @@ export default function CommunityPage() {
               <LiveCard
                 text={liveText}
                 isSelected={selectedInsight === liveText}
-                onClick={() => handleInsight(liveText)}
+                onClick={() => handleInsight(liveText, liveId ?? undefined)}
               />
             )}
             {insights.slice(0, 3).map((item, i) => (
