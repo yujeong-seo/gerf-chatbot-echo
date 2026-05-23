@@ -1,4 +1,4 @@
-import type { InlineCalendar, Keyword } from './types'
+import type { InlineCalendar, Keyword, LiveEvent } from './types'
 
 export const BASE_URL = import.meta.env.VITE_API_URL ?? ''
 
@@ -26,7 +26,7 @@ export async function fetchTrendingKeywords(): Promise<Keyword[]> {
 
 export interface InsightItem { title: string; venue: string; time: string; description: string; count: number; tags: string[] }
 
-export async function fetchTrending(): Promise<{ popular_now: Keyword[]; insights: InsightItem[] }> {
+export async function fetchTrending(): Promise<{ popular_now: Keyword[]; insights: InsightItem[]; live: LiveEvent | null }> {
   try {
     const res = await fetch(`${BASE_URL}/api/trending`)
     if (!res.ok) throw new Error()
@@ -34,9 +34,10 @@ export async function fetchTrending(): Promise<{ popular_now: Keyword[]; insight
     return {
       popular_now: data.popular_now?.length ? data.popular_now : MOCK_KEYWORDS,
       insights:    data.insights ?? [],
+      live:        data.live ?? null,
     }
   } catch {
-    return { popular_now: MOCK_KEYWORDS, insights: [] }
+    return { popular_now: MOCK_KEYWORDS, insights: [], live: null }
   }
 }
 
