@@ -11,6 +11,7 @@ Structured SQL tools are removed; search_events handles all discovery internally
 and is far more reliable than letting the model write ad-hoc SQL.
 """
 import json
+import re
 import sqlite3
 from pathlib import Path
 from typing import Optional, Union
@@ -21,6 +22,7 @@ from langchain_classic.agents.output_parsers import ReActSingleInputOutputParser
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain_core.exceptions import OutputParserException
 from langchain_core.prompts import PromptTemplate
+from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 
 from .tools         import build_faq_tool
@@ -63,16 +65,68 @@ def _init_db() -> None:
 # ---------------------------------------------------------------------------
 
 class _FlexibleReActParser(ReActSingleInputOutputParser):
-    """Accepts bare JSON output as a Final Answer when the model omits the prefix."""
+    """Tolerant ReAct output parser.
+
+    Post-processes two known LLM format deviations:
+      1. Function-call syntax in Action line: get_event_by_id("slug") → get_event_by_id
+      2. Thought + bare JSON without 'Final Answer:' prefix → treated as Final Answer
+    """
 
     def parse(self, text: str) -> Union[AgentAction, AgentFinish]:
         try:
-            return super().parse(text)
+            result = super().parse(text)
+            # Bug 1: normalize action name if LLM emitted function-call syntax
+            if isinstance(result, AgentAction):
+                clean_tool = re.sub(r'\s*\(.*\)\s*$', '', result.tool).strip()
+                if clean_tool != result.tool:
+                    result = AgentAction(
+                        tool=clean_tool,
+                        tool_input=result.tool_input,
+                        log=result.log,
+                    )
+            return result
         except OutputParserException:
-            stripped = text.strip()
-            if stripped.startswith("{") and stripped.endswith("}"):
-                return AgentFinish(return_values={"output": stripped}, log=text)
+            # Bug 2: trailing JSON block (handles "Thought: ...\n{...}")
+            json_match = re.search(r'(\{.*\})\s*$', text, re.DOTALL)
+            if json_match:
+                candidate = json_match.group(1)
+                try:
+                    json.loads(candidate)
+                    return AgentFinish(return_values={"output": candidate}, log=text)
+                except json.JSONDecodeError:
+                    pass
+            # Bug 3: no Action line present — LLM skipped the ReAct format entirely.
+            # Re-raise with an explicit correction so the LLM learns the required format.
+            # Do NOT wrap as a final answer here: the LLM may not have called any tools yet,
+            # and accepting unverified text would allow hallucinated event details.
+            if not re.search(r'Action\s*\d*\s*:', text):
+                raise OutputParserException(
+                    "Response not in ReAct format.",
+                    observation=(
+                        "You skipped the required format. You MUST end with:\n"
+                        'Final Answer: {"response": "your message", "keywords": []}\n'
+                        "If you need a tool first, write Action: <tool_name> then Action Input: <input>. "
+                        "Never output free text — always use Final Answer: with a JSON object."
+                    ),
+                    llm_output=text,
+                    send_to_llm=True,
+                )
             raise
+
+
+# ---------------------------------------------------------------------------
+# No-op tool for replies that need no event data
+# ---------------------------------------------------------------------------
+
+@tool
+def respond_directly(reason: str) -> str:
+    """Call this when no event lookup or external data is needed.
+
+    Use for: onboarding questions, clarifying follow-ups, dissatisfaction
+    acknowledgments, or any reply drawn entirely from the current conversation.
+    Input: one-line reason (e.g. 'Goal C — asking warm onboarding question').
+    """
+    return f"No external data required — answer from conversation context only. Reason: {reason}"
 
 
 # ---------------------------------------------------------------------------
@@ -101,7 +155,7 @@ Final Answer: {{"response": "your message", "keywords": ["kw1"]}}
 (When the response is a broad discovery or recommendation — i.e. you called search_events for general browsing — also include: "suggest_interests": true)
 
 Rules:
-- If no tool is needed, go directly from Thought to Final Answer — omit Action/Action Input.
+- You MUST always call exactly one tool before Final Answer — no exceptions. If no event data is needed (onboarding, clarifying questions, Goal C engagement), call respond_directly with a brief reason. Never skip the Action / Action Input / Observation cycle.
 - Final Answer must be a single valid JSON object on one line (no embedded newlines).
 - Represent bullet points in the response value as \\n- (escaped newline followed by hyphen).
 - After the final bullet, separate any follow-up sentence with \\n\\n (two newlines = blank line).
@@ -109,6 +163,7 @@ Rules:
 - Use event titles exactly as they appear in tool results. Synthesise descriptions naturally from the provided detail — do not copy field values verbatim.
 - If events or titles already appear in [Conversation so far:], do not recommend them again unless the user explicitly asks.
 - Only answer from tool observations. If the tools did not return the information being asked about, do not supplement from model training knowledge. Acknowledge the gap using the A/B/C patterns in the system prompt.
+- The `response` field is the final user-facing message ONLY. It must never contain tool-calling notes, search descriptions, processing steps, or bracketed internal text such as "[Calling search_events...]". If a tool has not been called yet, call it via Action / Action Input — never describe or narrate it inside `response`.
 
 Begin!
 
@@ -132,10 +187,12 @@ def _build_agent():
         input_variables=["input", "agent_scratchpad", "tools", "tool_names"],
         template=system_escaped + _REACT_SUFFIX,
     )
-
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    
+    # openai model
+    llm = ChatOpenAI(model="gpt-4.1-nano", temperature=0)
 
     all_tools = [
+        respond_directly,
         search_events,
         build_faq_tool(),
         current_datetime_tool,

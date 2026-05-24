@@ -1,9 +1,12 @@
 import asyncio
 import json
+import logging
 import os
 import sqlite3
 from contextlib import asynccontextmanager
 from pathlib import Path
+
+_log = logging.getLogger("api")
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -324,7 +327,9 @@ def chat(req: ChatRequest):
     try:
         raw, tool_calls = run_agent(req.message, thread_id=req.thread_id, username=req.username or "", interests_prompted=req.interests_prompted)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        _log.error("Agent error: %s", exc, exc_info=True)
+        raw = json.dumps({"response": "I'm having a little trouble right now — could you try again in a moment?", "keywords": []})
+        tool_calls = []
 
     if req.visit_type == "test" and req.thread_id:
         _upsert_test_meta(req.thread_id, req.username, _derive_droppoint(tool_calls))
