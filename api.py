@@ -79,12 +79,13 @@ def _prewarm_trending() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    loop = asyncio.get_event_loop()
-    loop.run_in_executor(None, _prewarm_trending)
-    expiry_task = asyncio.create_task(_session_expiry_loop())
-    # trending_task = asyncio.create_task(_trending_refresh_loop())  # paused — re-enable when live
+    # All real-time background tasks paused — re-enable when live
+    # loop = asyncio.get_event_loop()
+    # loop.run_in_executor(None, _prewarm_trending)
+    # expiry_task = asyncio.create_task(_session_expiry_loop())
+    # trending_task = asyncio.create_task(_trending_refresh_loop())
     yield
-    expiry_task.cancel()
+    # expiry_task.cancel()
     # trending_task.cancel()
 
 
@@ -399,7 +400,7 @@ def calendar_ics(event_id: str):
 import time as _time
 import re as _re
 from collections import Counter as _Counter
-from datetime import datetime as _dt, timezone as _tz
+from datetime import datetime as _dt, timezone as _tz, timedelta as _td
 from zoneinfo import ZoneInfo as _ZoneInfo
 
 _TRENDING_TTL = 3600  # 60 min — safety fallback; background loop refreshes at XX:00 and XX:30
@@ -450,6 +451,11 @@ def _set_trending_cache_sb(popular_now: list, insights: list, live: dict | None)
     try:
         from supabase import create_client
         sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
+        # Guard: skip if another worker already wrote within the last 60 seconds
+        cutoff = (_dt.now(_tz.utc) - _td(seconds=60)).isoformat()
+        recent = sb.table("trending_cache").select("cached_at").gte("cached_at", cutoff).limit(1).execute().data
+        if recent:
+            return
         sb.table("trending_cache").insert({
             "popular_now": popular_now,
             "insights":    insights,
@@ -716,10 +722,10 @@ def get_trending():
         _set_mem_cache(cached)
         return cached
 
-    # Layer 3: full recompute
+    # Layer 3: full recompute (write to Supabase paused — re-enable when live)
     result = _compute_trending()
     _set_mem_cache(result)
-    _set_trending_cache_sb(result["popular_now"], result["insights"], result["live"])
+    # _set_trending_cache_sb(result["popular_now"], result["insights"], result["live"])
     return result
 
 
