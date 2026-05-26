@@ -6,7 +6,8 @@ import { savePreferences } from '../api'
 const MAX_SELECTED = 5
 
 interface Props {
-  threadId: string
+  threadId:   string
+  onMessage?: (text: string) => void
 }
 
 function readStored(): string[] {
@@ -16,7 +17,7 @@ function readStored(): string[] {
   } catch { return [] }
 }
 
-export default function InlineInterestPrompt({ threadId }: Props) {
+export default function InlineInterestPrompt({ threadId, onMessage }: Props) {
   const [savedInterests,   setSavedInterests]   = useState<string[]>(readStored)
   const [currentInterests, setCurrentInterests] = useState<string[]>(readStored)
   const [hasSaved,         setHasSaved]         = useState(false)
@@ -79,6 +80,11 @@ export default function InlineInterestPrompt({ threadId }: Props) {
     setHasSaved(true)
     setSaveState('saved')
     setTimeout(() => setSaveState('idle'), 2000)
+    const labels = INTEREST_OPTIONS
+      .filter(o => currentInterests.includes(o.id))
+      .map(o => o.label)
+      .join(', ')
+    if (labels) onMessage?.(`I am interested in ${labels}.`)
   }
 
   const count = currentInterests.length
