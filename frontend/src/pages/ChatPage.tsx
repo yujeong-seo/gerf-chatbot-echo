@@ -131,7 +131,7 @@ function getOptions(): { options: OptionDef[]; visitType: string } {
 
 // ── Inline card renderer ──────────────────────────────────────────────────
 
-function InlineCardRenderer({ card }: { card: InlineCard }) {
+function InlineCardRenderer({ card, onSendMessage }: { card: InlineCard; onSendMessage?: (text: string) => void }) {
   if (card.type === 'calendar') {
     return (
       <InlineCalendarCard
@@ -149,7 +149,7 @@ function InlineCardRenderer({ card }: { card: InlineCard }) {
       />
     )
   }
-  if (card.type === 'interest') return <InlineInterestPrompt threadId={card.threadId} />
+  if (card.type === 'interest') return <InlineInterestPrompt threadId={card.threadId} onMessage={onSendMessage} />
   if (card.type === 'email')    return <InlineEmailPrompt    threadId={card.threadId} />
   return null
 }
@@ -406,7 +406,7 @@ export default function ChatPage({ messages, setMessages, threadId }: Props) {
                 {msg.role === 'assistant' && msg.inline && (
                   <div style={{ marginTop: 8 }}>
                     <div style={{ maxWidth: '78%' }}>
-                      <InlineCardRenderer card={msg.inline} />
+                      <InlineCardRenderer card={msg.inline} onSendMessage={(text) => sendMessage(text)} />
                     </div>
                   </div>
                 )}
