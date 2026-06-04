@@ -129,7 +129,7 @@ export default function EntryPage() {
     sessionStorage.setItem('echo_onboarded',  '1')
     sessionStorage.setItem('echo_visit_type', visitType)
     if (!skipName && name.trim()) sessionStorage.setItem('echo_name', name.trim())
-    navigate('/community')
+    navigate('/chat')
   }
 
   const visitLabel = visitType === 'test' ? 'Testing' : visitType === 'pre' ? 'Pre-visit' : visitType === 'on' ? 'On-visit' : 'Post-visit'
@@ -218,7 +218,6 @@ export default function EntryPage() {
                 <div className="flex flex-row justify-between items-end">
                   {/* Radio buttons */}
                   <div className="flex flex-col gap-4 mb-6">
-                    <RadioRow label="Testing"    selected={visitType === 'test'} onClick={() => setVisitType('test')} />
                     <RadioRow label="Pre-visit"  selected={visitType === 'pre'}  onClick={() => setVisitType('pre')}  />
                     <RadioRow label="On-visit"   selected={visitType === 'on'}   onClick={() => setVisitType('on')}   />
                     <RadioRow label="Post-visit" selected={visitType === 'post'} onClick={() => setVisitType('post')} />
