@@ -157,28 +157,3 @@ CREATE TABLE IF NOT EXISTS event_sessions (
     time_end      TEXT NOT NULL,
     session_notes TEXT
 );
-
-
--- =============================================================================
--- SECTION 4: TEST SESSION PROFILES (RUN THIS — test-mode analytics table)
--- Written by parser.py only for sessions where visit_type = 'test'.
--- Mirrors session_profiles with 3 additional fields: username, turn, tool.
--- event_interactions and session_feedback are still written for test sessions.
--- =============================================================================
-
-CREATE TABLE IF NOT EXISTS test_session_profiles (
-    session_id           TEXT PRIMARY KEY,
-    profile_type         TEXT,
-    interest_tags        TEXT[],
-    chat_topics          TEXT[],
-    audience_type        TEXT,
-    content_type         TEXT,
-    interaction_depth    TEXT,
-    sentiment_score      FLOAT,
-    sentiment_overall    TEXT,
-    session_started_at   TEXT,
-    last_interaction_at  TEXT,
-    username             TEXT,        -- echo_name provided at entry (required in test mode)
-    turn                 INTEGER,     -- number of user turns in the session
-    droppoint            TEXT         -- last agent output type: overview | location | detail | calendar | faq | schedule | feedback
-);

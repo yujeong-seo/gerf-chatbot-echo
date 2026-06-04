@@ -20,4 +20,3 @@ supabase
 
 # Data processing & integrations
 pandas
-pyairtable

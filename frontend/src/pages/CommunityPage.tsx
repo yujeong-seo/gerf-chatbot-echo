@@ -573,11 +573,12 @@ export default function CommunityPage() {
   const [modalMounted,    setModalMounted]    = useState(false)
   const [modalShowing,    setModalShowing]    = useState(false)
 
-  const isTestMode = sessionStorage.getItem('echo_visit_type') === 'test'
+  const visitType      = sessionStorage.getItem('echo_visit_type') ?? 'on'
+  const usePlaceholder = visitType === 'test' || visitType === 'pre' || visitType === 'on' || visitType === 'post'
   const visitStatus = getVisitStatus()
 
   useEffect(() => {
-    if (isTestMode) {
+    if (usePlaceholder) {
       setKeywords(generateFallbackKeywords())
       setInsights(TEST_ACTIVITIES)
       return
@@ -640,8 +641,8 @@ export default function CommunityPage() {
     navigate('/chat')
   }
 
-  const liveText: string | null = isTestMode ? LIVE_TEXT_TEST : (liveEvent?.title ?? null)
-  const liveId:   string | null = isTestMode ? 'moving-through-time-a-dance-experiment' : (liveEvent?.event_id ?? null)
+  const liveText: string | null = usePlaceholder ? LIVE_TEXT_TEST : (liveEvent?.title ?? null)
+  const liveId:   string | null = usePlaceholder ? 'moving-through-time-a-dance-experiment' : (liveEvent?.event_id ?? null)
 
   const SECTION_PY = 30
 

@@ -11,7 +11,6 @@ Pipeline:
   3. LLM-extract structured insights → session_profile, interactions, feedback
   4. Save all three to Supabase
   5. Delete temporary SQLite logs  ← only runs after successful Supabase write
-  6. Optionally write CRM record to Airtable (requires explicit consent)
 """
 import sqlite3
 from pathlib import Path
@@ -24,7 +23,6 @@ from .supabase_store import (
     save_feedback_entries,
     save_test_session_profile,
 )
-from ..data.airtable import write_crm_registration
 
 _DB_FILE = Path(__file__).parent.parent.parent / "rag" / "gerf_sessions.db"
 
@@ -75,15 +73,11 @@ def _load_test_meta(thread_id: str) -> dict | None:
     }
 
 
-def parse_session(thread_id: str, crm_data: dict | None = None) -> dict:
+def parse_session(thread_id: str) -> dict:
     """Parse and archive a completed session.
 
     Args:
         thread_id: The session identifier (matches frontend thread_id).
-        crm_data:  Optional dict for Airtable CRM write. Required keys:
-                     name, email, consent_given (bool), consent_timestamp,
-                     interest_tags (list[str]), preferred_topics (list[str])
-                   Only written if consent_given is True.
 
     Returns one of:
         {"status": "parsed",  "thread_id": ..., "message_count": ..., ...}
@@ -91,7 +85,6 @@ def parse_session(thread_id: str, crm_data: dict | None = None) -> dict:
         {"status": "error",   "thread_id": ..., "detail": ...}
 
     SQLite logs are deleted only after a successful Supabase write.
-    A CRM failure does not roll back the analytics write.
     """
     messages, started_at, last_at = _load_full_history(thread_id)
 
@@ -131,12 +124,6 @@ def parse_session(thread_id: str, crm_data: dict | None = None) -> dict:
         }
 
     _delete_session_logs(thread_id)
-
-    if crm_data and crm_data.get("consent_given"):
-        try:
-            write_crm_registration(crm_data)
-        except Exception:
-            pass  # CRM failure is non-fatal; analytics already saved
 
     return {
         "status":             "parsed",

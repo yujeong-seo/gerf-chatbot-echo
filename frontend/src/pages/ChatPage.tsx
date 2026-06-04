@@ -9,7 +9,6 @@ import InlineCalendarCard  from '../components/InlineCalendarCard'
 import InlineLinkCard      from '../components/InlineLinkCard'
 import InlineTicketCard    from '../components/InlineTicketCard'
 import InlineInterestPrompt from '../components/InlineInterestPrompt'
-import InlineEmailPrompt    from '../components/InlineEmailPrompt'
 import { sendChatMessage } from '../api'
 import type { Message, InlineCard } from '../types'
 import chatExploreIcon  from '../assets/icons/chat-explore.svg'
@@ -116,7 +115,7 @@ function getOptions(): { options: OptionDef[]; visitType: string } {
   const faq: OptionDef = {
     icon: chatFaqIcon, title: 'FAQ Query',
     subtitle: 'Get quick answers',
-    query: 'What are the frequently asked questions about GERF?',
+    query: 'What should I know about visiting the festival? Things like travel, parking, accessibility and food.',
   }
   const feedback: OptionDef = {
     icon: chatFeedbackIcon, title: 'Share your experience',
@@ -150,17 +149,31 @@ function InlineCardRenderer({ card, onSendMessage }: { card: InlineCard; onSendM
     )
   }
   if (card.type === 'interest') return <InlineInterestPrompt threadId={card.threadId} onMessage={onSendMessage} />
-  if (card.type === 'email')    return <InlineEmailPrompt    threadId={card.threadId} />
   return null
 }
 
 // ── Bottom options (drawer) ───────────────────────────────────────────────
 
 const DRAWER_OPTIONS = [
-  { label: 'Modify interest tags',   inline: 'interest' as const },
-  { label: 'Register email interest', inline: 'email'    as const },
-  { label: 'Leave feedback',          inline: null },
+  { label: 'Modify interest tags', inline: 'interest' as const },
+  { label: 'Leave feedback',       inline: null },
 ]
+
+const DRAWER_ICONS: Record<string, React.ReactNode> = {
+  'Modify interest tags': (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+      stroke="var(--stone-600)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+      <line x1="7" y1="7" x2="7.01" y2="7"/>
+    </svg>
+  ),
+  'Leave feedback': (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+      stroke="var(--stone-600)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+  ),
+}
 
 // ── Page ──────────────────────────────────────────────────────────────────
 
@@ -301,20 +314,6 @@ export default function ChatPage({ messages, setMessages, threadId }: Props) {
           content: 'Here are your interest tags — select up to 5 to personalise my suggestions.',
           timestamp: new Date(),
           inline: { type: 'interest' as const, threadId },
-        },
-      ])
-      return
-    }
-
-    if (opt.inline === 'email') {
-      setMessages(prev => [
-        ...prev,
-        { id: crypto.randomUUID(), role: 'user', content: opt.label, timestamp: new Date() },
-        {
-          id: crypto.randomUUID(), role: 'assistant',
-          content: 'Register your email below to get festival updates and news.',
-          timestamp: new Date(),
-          inline: { type: 'email' as const, threadId },
         },
       ])
       return
@@ -540,54 +539,56 @@ export default function ChatPage({ messages, setMessages, threadId }: Props) {
           )}
 
           {/* Options drawer — same width + rounding as chat input, sits behind it */}
-          {optionsOpen && (
-            <div style={{
-              position:     'relative',
-              zIndex:       3,
-            }}>
-              {DRAWER_OPTIONS.map((opt, i) => (
-                <div key={opt.label}>
-                  {i > 0 && <div style={{ height: 1, background: '#F0F0F0', margin: '0 20px' }} />}
-                  <button
-                    onClick={() => handleDrawerOption(opt)}
-                    style={{
-                      display:    'flex',
-                      alignItems: 'center',
-                      gap:        16,
-                      width:      '100%',
-                      padding:    '20px 20px',
-                      background: 'none',
-                      border:     'none',
-                      cursor:     'pointer',
-                      textAlign:  'left',
-                    }}
-                  >
-                    <div style={{
-                      width: 20, height: 20, borderRadius: 4,
-                      background: 'var(--stone-900)', flexShrink: 0,
-                    }} />
-                    <span style={{
-                      fontFamily:    'var(--font-main)',
-                      fontWeight:    500,
-                      fontSize:      16,
-                      color:         'var(--stone-900)',
-                      letterSpacing: 'var(--tr-main)',
-                    }}>
-                      {opt.label}
-                    </span>
-                  </button>
-                </div>
-              ))}
-              {/* Spacer — hidden behind the overlapping chat input */}
-              <div style={{ height: 20 }} />
-            </div>
-          )}
+          <div style={{
+            overflow:   'hidden',
+            maxHeight:  optionsOpen ? '200px' : '0px',
+            opacity:    optionsOpen ? 1 : 0,
+            transition: 'max-height 0.32s cubic-bezier(0.4,0,0.2,1), opacity 0.22s ease',
+            position:   'relative',
+            zIndex:     3,
+          }}>
+            {DRAWER_OPTIONS.map((opt, i) => (
+              <div key={opt.label}>
+                {i > 0 && <div style={{ height: 1, background: '#F0F0F0', margin: '0 20px' }} />}
+                <button
+                  onClick={() => handleDrawerOption(opt)}
+                  style={{
+                    display:    'flex',
+                    alignItems: 'center',
+                    gap:        16,
+                    width:      '100%',
+                    padding:    '20px 20px',
+                    background: 'none',
+                    border:     'none',
+                    cursor:     'pointer',
+                    textAlign:  'left',
+                  }}
+                >
+                  <div style={{ width: 20, height: 20, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {DRAWER_ICONS[opt.label]}
+                  </div>
+                  <span style={{
+                    fontFamily:    'var(--font-main)',
+                    fontWeight:    500,
+                    fontSize:      16,
+                    color:         'var(--stone-900)',
+                    letterSpacing: 'var(--tr-main)',
+                  }}>
+                    {opt.label}
+                  </span>
+                </button>
+              </div>
+            ))}
+            {/* Spacer — hidden behind the overlapping chat input */}
+            <div style={{ height: 20 }} />
+          </div>
 
           {/* Chat input — sits in front of the drawer */}
           <div style={{
-            position:  'relative',
-            zIndex:    5,
-            marginTop: optionsOpen ? -20 : 0,
+            position:   'relative',
+            zIndex:     5,
+            marginTop:  optionsOpen ? -20 : 0,
+            transition: 'margin-top 0.32s cubic-bezier(0.4,0,0.2,1)',
           }}>
             <ChatInput
               value={inputValue}
