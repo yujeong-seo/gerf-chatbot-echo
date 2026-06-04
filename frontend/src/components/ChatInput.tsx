@@ -115,7 +115,7 @@ export default function ChatInput({ value, onChange, onSend, disabled }: Props) 
         value={value}
         onChange={e => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Message ECHO…"
+        placeholder="Share what you are looking for..."
         disabled={disabled}
         className="no-scroll"
         style={{

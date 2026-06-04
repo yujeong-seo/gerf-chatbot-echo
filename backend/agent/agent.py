@@ -11,6 +11,7 @@ Structured SQL tools are removed; search_events handles all discovery internally
 and is far more reliable than letting the model write ad-hoc SQL.
 """
 import json
+import os
 import sqlite3
 from pathlib import Path
 from typing import Optional, Union
@@ -173,6 +174,71 @@ def get_agent():
 
 
 # ---------------------------------------------------------------------------
+# Routing feature flag
+# ---------------------------------------------------------------------------
+
+ROUTING_ENABLED = os.getenv("ROUTING_ENABLED", "false").lower() == "true"
+
+
+# ---------------------------------------------------------------------------
+# Action-only agent (calendar / maps / booking — no search or FAQ tools)
+# ---------------------------------------------------------------------------
+
+def _build_action_agent():
+    _init_db()
+    raw_system   = _PROMPT_FILE.read_text()
+    system_esc   = raw_system.replace("{", "{{").replace("}", "}}")
+    prompt       = PromptTemplate(
+        input_variables=["input", "agent_scratchpad", "tools", "tool_names"],
+        template=system_esc + _REACT_SUFFIX,
+    )
+    llm          = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    action_tools = [
+        create_calendar_event,
+        maps_url_tool,
+        event_url_tool,
+        get_event_by_id,
+    ]
+    agent = create_react_agent(
+        llm=llm,
+        tools=action_tools,
+        prompt=prompt,
+        output_parser=_FlexibleReActParser(),
+    )
+    return AgentExecutor(
+        agent=agent,
+        tools=action_tools,
+        verbose=True,
+        handle_parsing_errors=True,
+        max_iterations=5,
+    )
+
+
+_action_agent = None
+
+
+def _get_action_agent():
+    global _action_agent
+    if _action_agent is None:
+        _action_agent = _build_action_agent()
+    return _action_agent
+
+
+# ---------------------------------------------------------------------------
+# Onboarding chain — direct LLM call, no tools, no ReAct loop
+# ---------------------------------------------------------------------------
+
+def _run_onboarding_chain(enriched: str) -> str:
+    from langchain_core.messages import SystemMessage, HumanMessage
+    llm    = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    result = llm.invoke([
+        SystemMessage(content=_PROMPT_FILE.read_text()),
+        HumanMessage(content=enriched),
+    ])
+    return result.content.strip()
+
+
+# ---------------------------------------------------------------------------
 # Public interface
 # ---------------------------------------------------------------------------
 
@@ -201,13 +267,15 @@ def run_agent(
     if interests_prompted:
         parts.append("[Interests already prompted]\n")
 
+    _has_history = False
     if thread_id:
         interests_ctx = build_interests_context(thread_id)
         if interests_ctx:
             parts.append(interests_ctx)
 
-        history = load_history(thread_id)
-        history_ctx = format_history_context(history)
+        _history     = load_history(thread_id)
+        _has_history = bool(_history)
+        history_ctx  = format_history_context(_history)
         if history_ctx:
             parts.append(history_ctx)
 
@@ -217,13 +285,33 @@ def run_agent(
     if thread_id:
         save_message(thread_id, "user", query)
 
-    result = get_agent().invoke({"input": enriched})
-    output = result["output"]
-
-    tool_calls = [
-        {"tool": action.tool, "input": str(action.tool_input)}
-        for action, _obs in result.get("intermediate_steps", [])
-    ]
+    if ROUTING_ENABLED:
+        from .router import classify_intent, Intent as _Intent
+        _intent = classify_intent(query, has_history=_has_history).intent
+        if _intent == _Intent.ONBOARDING:
+            output     = _run_onboarding_chain(enriched)
+            tool_calls = []
+        elif _intent == _Intent.ACTION:
+            _res       = _get_action_agent().invoke({"input": enriched})
+            output     = _res["output"]
+            tool_calls = [
+                {"tool": a.tool, "input": str(a.tool_input)}
+                for a, _ in _res.get("intermediate_steps", [])
+            ]
+        else:  # DISCOVERY — handles event search, FAQ, logistics, and any slipthrough
+            _res       = get_agent().invoke({"input": enriched})
+            output     = _res["output"]
+            tool_calls = [
+                {"tool": a.tool, "input": str(a.tool_input)}
+                for a, _ in _res.get("intermediate_steps", [])
+            ]
+    else:
+        result     = get_agent().invoke({"input": enriched})
+        output     = result["output"]
+        tool_calls = [
+            {"tool": action.tool, "input": str(action.tool_input)}
+            for action, _obs in result.get("intermediate_steps", [])
+        ]
 
     if thread_id:
         try:

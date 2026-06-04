@@ -168,7 +168,7 @@ def _format_event(row: sqlite3.Row) -> str:
     )
 
 
-def _run_search(conn: sqlite3.Connection, terms: list[str], limit: int = 6) -> list[sqlite3.Row]:
+def _run_search(conn: sqlite3.Connection, terms: list[str]) -> list[sqlite3.Row]:
     if not terms:
         return []
     placeholders = " OR ".join(
@@ -179,7 +179,7 @@ def _run_search(conn: sqlite3.Connection, terms: list[str], limit: int = 6) -> l
     sql = (
         "SELECT event_id, title, venue_name, zone_id, dates, time, is_multi_slot, "
         "registration_type, short_description, long_description, arrival_notes "
-        f"FROM events WHERE {placeholders} LIMIT {limit * 4}"
+        f"FROM events WHERE {placeholders}"
     )
     return conn.execute(sql, params).fetchall()
 
