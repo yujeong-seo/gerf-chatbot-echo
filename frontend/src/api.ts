@@ -2,28 +2,6 @@ import type { InlineCalendar, Keyword, LiveEvent } from './types'
 
 export const BASE_URL = import.meta.env.VITE_API_URL ?? ''
 
-// ── Mocks ─────────────────────────────────────────────────────────────────
-
-export const MOCK_KEYWORDS: Keyword[] = [
-  { id: '1', text: 'Robotics',          weight: 5 },
-  { id: '2', text: 'Live Music',         weight: 4 },
-  { id: '3', text: 'Art Walk',           weight: 4 },
-  { id: '4', text: 'Family Activities',  weight: 3 },
-  { id: '5', text: 'Science Demos',      weight: 3 },
-  { id: '6', text: 'Food & Drink',       weight: 2 },
-]
-
-export async function fetchTrendingKeywords(): Promise<Keyword[]> {
-  try {
-    const res = await fetch(`${BASE_URL}/api/trending`)
-    if (!res.ok) throw new Error()
-    const data = await res.json()
-    return data.popular_now?.length ? data.popular_now : MOCK_KEYWORDS
-  } catch {
-    return MOCK_KEYWORDS
-  }
-}
-
 export interface InsightItem { title: string; venue: string; time: string; description: string; count: number; tags: string[] }
 
 export async function fetchTrending(): Promise<{ popular_now: Keyword[]; insights: InsightItem[]; live: LiveEvent | null }> {
@@ -32,12 +10,12 @@ export async function fetchTrending(): Promise<{ popular_now: Keyword[]; insight
     if (!res.ok) throw new Error()
     const data = await res.json()
     return {
-      popular_now: data.popular_now?.length ? data.popular_now : MOCK_KEYWORDS,
-      insights:    data.insights ?? [],
-      live:        data.live ?? null,
+      popular_now: data.popular_now ?? [],
+      insights:    data.insights    ?? [],
+      live:        data.live        ?? null,
     }
   } catch {
-    return { popular_now: MOCK_KEYWORDS, insights: [], live: null }
+    return { popular_now: [], insights: [], live: null }
   }
 }
 

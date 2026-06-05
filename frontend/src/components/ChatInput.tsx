@@ -1,5 +1,12 @@
-import { useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
+
 import sendIcon from '../assets/icons/send.svg'
+
+const PLACEHOLDERS = [
+  'Share what you are looking for today...',
+  'Ask ECHO about event related queries...',
+  'Enjoyed the activity? Share your experience',
+]
 
 interface Props {
   value:    string
@@ -48,6 +55,19 @@ export default function ChatInput({ value, onChange, onSend, disabled }: Props) 
   const recognitionRef = useRef<AnySpeechRecognition | null>(null)
   const baseValueRef   = useRef('')
   const [recording,    setRecording] = useState(false)
+  const [phIndex,      setPhIndex]   = useState(0)
+  const [phVisible,    setPhVisible] = useState(true)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setPhVisible(false)
+      setTimeout(() => {
+        setPhIndex(i => (i + 1) % PLACEHOLDERS.length)
+        setPhVisible(true)
+      }, 400)
+    }, 4000)
+    return () => clearInterval(id)
+  }, [])
 
   const SpeechRecognitionAPI = getSpeechRecognition()
 
@@ -110,31 +130,55 @@ export default function ChatInput({ value, onChange, onSend, disabled }: Props) 
         borderRadius: 12,
       }}
     >
-      <textarea
-        rows={2}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder="Share what you are looking for..."
-        disabled={disabled}
-        className="no-scroll"
-        style={{
-          flex:          1,
-          background:    'transparent',
-          border:        'none',
-          outline:       'none',
-          resize:        'none',
-          fontFamily:    'var(--font-main)',
-          fontSize:      14,
-          fontWeight:    400,
-          letterSpacing: 'var(--tr-main)',
-          lineHeight:    '1.5',
-          color:         'var(--stone-900)',
-          overflowY:     'auto',
-          height:        80,
-          padding:       8,
-        }}
-      />
+      <div style={{ flex: 1, position: 'relative' }}>
+        {!value && (
+          <div
+            aria-hidden
+            style={{
+              position:      'absolute',
+              top:           8,
+              left:          8,
+              pointerEvents: 'none',
+              fontFamily:    'var(--font-main)',
+              fontSize:      14,
+              fontWeight:    400,
+              letterSpacing: 'var(--tr-main)',
+              lineHeight:    '1.5',
+              color:         'var(--stone-400, #aaa)',
+              opacity:       phVisible ? 1 : 0,
+              transition:    'opacity 0.3s ease',
+              whiteSpace:    'nowrap',
+              overflow:      'hidden',
+            }}
+          >
+            {PLACEHOLDERS[phIndex]}
+          </div>
+        )}
+        <textarea
+          rows={2}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={disabled}
+          className="no-scroll"
+          style={{
+            width:         '100%',
+            background:    'transparent',
+            border:        'none',
+            outline:       'none',
+            resize:        'none',
+            fontFamily:    'var(--font-main)',
+            fontSize:      14,
+            fontWeight:    400,
+            letterSpacing: 'var(--tr-main)',
+            lineHeight:    '1.5',
+            color:         'var(--stone-900)',
+            overflowY:     'auto',
+            height:        80,
+            padding:       8,
+          }}
+        />
+      </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
         {/* Audio */}

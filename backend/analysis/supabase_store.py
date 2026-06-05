@@ -26,7 +26,6 @@ def save_session_profile(
     prefs = profile.get("engagement_preferences") or {}
     row = {
         "session_id":          thread_id,
-        "profile_type":        profile.get("profile_type", "anonymous"),
         "interest_tags":       profile.get("interest_tags", []),
         "chat_topics":         profile.get("chat_topics", []),
         "audience_type":       prefs.get("audience_type"),
@@ -105,7 +104,6 @@ def save_test_session_profile(
     prefs = profile.get("engagement_preferences") or {}
     row = {
         "session_id":          thread_id,
-        "profile_type":        profile.get("profile_type", "anonymous"),
         "interest_tags":       profile.get("interest_tags", []),
         "chat_topics":         profile.get("chat_topics", []),
         "audience_type":       prefs.get("audience_type"),

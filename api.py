@@ -79,14 +79,13 @@ def _prewarm_trending() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # All real-time background tasks paused — re-enable when live
-    # loop = asyncio.get_event_loop()
-    # loop.run_in_executor(None, _prewarm_trending)
-    # expiry_task = asyncio.create_task(_session_expiry_loop())
-    # trending_task = asyncio.create_task(_trending_refresh_loop())
+    loop = asyncio.get_event_loop()
+    loop.run_in_executor(None, _prewarm_trending)
+    expiry_task   = asyncio.create_task(_session_expiry_loop())
+    trending_task = asyncio.create_task(_trending_refresh_loop())
     yield
-    # expiry_task.cancel()
-    # trending_task.cancel()
+    expiry_task.cancel()
+    trending_task.cancel()
 
 
 app = FastAPI(title="GERF Agent API", lifespan=lifespan)
@@ -400,7 +399,7 @@ def calendar_ics(event_id: str):
 import time as _time
 import re as _re
 from collections import Counter as _Counter
-from datetime import datetime as _dt, timezone as _tz, timedelta as _td
+from datetime import datetime as _dt, timezone as _tz, timedelta as _td, date as _date
 from zoneinfo import ZoneInfo as _ZoneInfo
 
 _TRENDING_TTL = 3600  # 60 min — safety fallback; background loop refreshes at XX:00 and XX:30
@@ -468,69 +467,109 @@ def _set_trending_cache_sb(popular_now: list, insights: list, live: dict | None)
 
 # ── Live event (derived from SQLite events/sessions, London time) ─────────────
 
+_FESTIVAL_START = _date(2026, 6, 6)
+_FESTIVAL_LAST  = _date(2026, 6, 7)
+GENERAL_START   = "12:00"
+GENERAL_END     = "18:00"
+
+
 def _get_live_event() -> dict | None:
-    """Return the first event currently running in London time, or None."""
+    """Return a context-aware live block for the current London time.
+
+    Returns one of:
+      {"type": "upcoming",     "title": ..., "venue": ..., "time_start": ..., "time_end": ..., "event_id": ...}
+      {"type": "drop_in",      "text": ...}
+      {"type": "pre_festival", "text": ...}
+      {"type": "post_festival","text": ...}
+      None  — hide the live block (festival day, outside general hours, no upcoming events)
+    """
+    london   = _ZoneInfo("Europe/London")
+    now      = _dt.now(london)
+    today    = now.date()
+    now_time = now.strftime("%H:%M")
+
+    # After festival: last day after 18:00, or any day after June 7
+    if today > _FESTIVAL_LAST or (today == _FESTIVAL_LAST and now_time > GENERAL_END):
+        return {
+            "type": "post_festival",
+            "text": "The festival is over now. Would you like to leave feedback?",
+        }
+
+    # Before festival
+    if today < _FESTIVAL_START:
+        return {
+            "type": "pre_festival",
+            "text": "The festival is not live yet. Anything you want to figure out in advance?",
+        }
+
+    # During festival, general drop-in window (12:00–18:00)
+    if GENERAL_START <= now_time <= GENERAL_END:
+        return {
+            "type": "drop_in",
+            "text": "Most of the drop-in events are live now! Anything you are interested in?",
+        }
+
+    # During festival, outside general hours → look for events starting within 15–60 min
     if not _EVENTS_DB.exists():
         return None
-    london = _ZoneInfo("Europe/London")
-    now = _dt.now(london)
-    weekday = now.strftime("%A")                          # "Saturday"
-    day_month = f"{now.day} {now.strftime('%B')}"         # "6 June"
-    full_date = f"{weekday} {day_month}"                  # "Saturday 6 June"
-    now_time = now.strftime("%H:%M")
+
+    window_start = (_dt.now(london) + _td(minutes=30)).strftime("%H:%M")
+    window_end   = (_dt.now(london) + _td(hours=1)).strftime("%H:%M")
+    weekday      = now.strftime("%A")
+    full_date    = f"{weekday} {now.day} {now.strftime('%B')}"
 
     conn = sqlite3.connect(str(_EVENTS_DB))
     conn.row_factory = sqlite3.Row
 
-    # Multi-slot events: exact date + time window match
+    # Multi-slot: find the earliest session starting within the window
     row = conn.execute(
         """
         SELECT e.title, e.venue_name, es.time_start, es.time_end, e.event_id
         FROM   event_sessions es
         JOIN   events e ON e.event_id = es.event_id
         WHERE  es.date = ?
+          AND  es.time_start >= ?
           AND  es.time_start <= ?
-          AND  es.time_end   >= ?
+        ORDER BY es.time_start
         LIMIT 1
         """,
-        (full_date, now_time, now_time),
+        (full_date, window_start, window_end),
     ).fetchone()
 
-    if row:
-        conn.close()
-        return {
-            "title":      row["title"],
-            "venue":      row["venue_name"] or "",
-            "time_start": row["time_start"],
-            "time_end":   row["time_end"],
-            "event_id":   row["event_id"],
-        }
+    if not row:
+        # Single-slot: parse "HH:MM–HH:MM" and find one starting within the window
+        single_rows = conn.execute(
+            """
+            SELECT title, venue_name, time, event_id
+            FROM   events
+            WHERE  is_multi_slot = 0
+              AND  (dates = ? OR dates = 'Both')
+            """,
+            (weekday,),
+        ).fetchall()
+        for r in single_rows:
+            parts = (r["time"] or "").replace("–", "-").split("-", 1)
+            if len(parts) == 2:
+                t_start = parts[0].strip()
+                if window_start <= t_start <= window_end:
+                    row = r
+                    break
 
-    # Non-multi-slot events: match day and parse "HH:MM–HH:MM" time range
-    rows = conn.execute(
-        """
-        SELECT title, venue_name, time, event_id
-        FROM   events
-        WHERE  is_multi_slot = 0
-          AND  (dates = ? OR dates = 'Both')
-        """,
-        (weekday,),
-    ).fetchall()
     conn.close()
 
-    for r in rows:
-        parts = (r["time"] or "").replace("–", "-").split("-", 1)
-        if len(parts) == 2:
-            t_start, t_end = parts[0].strip(), parts[1].strip()
-            if t_start <= now_time <= t_end:
-                return {
-                    "title":      r["title"],
-                    "venue":      r["venue_name"] or "",
-                    "time_start": t_start,
-                    "time_end":   t_end,
-                    "event_id":   r["event_id"],
-                }
-    return None
+    if not row:
+        return None
+
+    t_start = row.get("time_start") or (row["time"] or "").replace("–", "-").split("-")[0].strip()
+    t_end   = row.get("time_end")   or (row["time"] or "").replace("–", "-").split("-")[-1].strip()
+    return {
+        "type":       "upcoming",
+        "title":      row["title"],
+        "venue":      row["venue_name"] or "",
+        "time_start": t_start,
+        "time_end":   t_end,
+        "event_id":   row["event_id"],
+    }
 
 
 # ── Thematic topic extraction ─────────────────────────────────────────────────
@@ -555,6 +594,8 @@ _STOP = {
 _NOISE = {
     'gerf','great','exhibition','road','festival','echo',
     'available','information','details','info','things','stuff',
+    'inquiry','inquiries','interest','interests','activities','activity',
+    'events','event','general','common','popular',
 }
 
 
@@ -575,9 +616,12 @@ def _polish_topics(raw_labels: list) -> list:
         from langchain_openai import ChatOpenAI as _LLM
         llm = _LLM(model='gpt-4o-mini', temperature=0, max_tokens=120)
         prompt = (
-            "Rewrite these festival visitor search topics as short (2-4 word), "
-            "title-case topic labels. Remove festival names, abbreviations, or "
-            "sentence fragments. Return ONLY a JSON array of strings, same length:\n"
+            "Rewrite these festival visitor search topics as short (2-4 word), noun-phrase, "
+            "title-case topic labels. Rules: no verbs (no 'discussed', 'selected', 'asking', "
+            "'interested in', 'inquiry'), no festival names or abbreviations, no generic words "
+            "like 'inquiry', 'interest', 'activities', 'events', 'general'. "
+            "Each label should name a specific theme or subject area. "
+            "Return ONLY a JSON array of strings, same length:\n"
             + str(raw_labels)
         )
         result = llm.invoke(prompt).content.strip()
@@ -601,23 +645,49 @@ def _parse_audience_tags(raw: str | None) -> list[str]:
     return [t.strip() for t in raw.split(",") if t.strip()]
 
 
+_TRENDING_WINDOW_HOURS = 3   # only consider interactions from the last N hours
+_TRENDING_MIN_ROWS     = 20  # signal frontend to use placeholder when fewer rows
+
+
 def _compute_trending() -> dict:
-    """Full recompute: query Supabase event_interactions + SQLite events."""
+    """Full recompute: query Supabase event_interactions (last 3 h) + SQLite events.
+
+    Returns popular_now=[] and insights=[] when data is sparse — the frontend
+    treats an empty popular_now as the signal to show its own placeholder data.
+    """
+    live = _get_live_event()
     try:
         from supabase import create_client
-        sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
-        rows = sb.table("event_interactions").select(
-            "interaction_summary, event_or_activity, event_zone, context_tags"
-        ).limit(500).execute().data
+        sb     = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
+        cutoff = (_dt.now(_tz.utc) - _td(hours=_TRENDING_WINDOW_HOURS)).isoformat()
+        rows   = (
+            sb.table("event_interactions")
+            .select("interaction_summary, event_or_activity, event_zone, context_tags, timestamp")
+            .gte("timestamp", cutoff)
+            .order("timestamp", desc=True)
+            .limit(500)
+            .execute()
+            .data
+        )
     except Exception:
-        return {"popular_now": [], "insights": [], "live": _get_live_event()}
+        return {"popular_now": [], "insights": [], "live": live}
+
+    if len(rows) < _TRENDING_MIN_ROWS:
+        return {"popular_now": [], "insights": [], "live": live}
 
     # Popular Now — thematic extraction + LLM polish
+    _GENERIC_LEAD = {
+        'inquiry','inquiries','interest','interests','activities','activity',
+        'events','event','general','common','popular',
+    }
     raw_topics = [
         _clean_summary(r["interaction_summary"])
         for r in rows if r.get("interaction_summary")
     ]
-    raw_topics = [t for t in raw_topics if t]
+    raw_topics = [
+        t for t in raw_topics
+        if t and t.lower().split()[0] not in _GENERIC_LEAD
+    ]
 
     topic_counts = _Counter(raw_topics)
     theme_counts: dict = {}
@@ -634,7 +704,7 @@ def _compute_trending() -> dict:
     raw_labels = [label for _, label in top_themes]
     polished_labels = _polish_topics(raw_labels)
 
-    weight_map = [5, 4, 3, 2, 2, 1]
+    weight_map = [10, 7, 5, 3, 2, 1]
     popular_now = [
         {"id": str(i + 1), "text": label, "weight": weight_map[i]}
         for i, label in enumerate(polished_labels)
@@ -645,8 +715,6 @@ def _compute_trending() -> dict:
         r.get("event_or_activity") for r in rows if r.get("event_or_activity")
     )
     top_activities = activity_counts_raw.most_common(3)
-
-    live = _get_live_event()
 
     if not _EVENTS_DB.exists():
         return {"popular_now": popular_now, "insights": [], "live": live}
@@ -663,7 +731,7 @@ def _compute_trending() -> dict:
         tags: list[str] = []
         if row:
             if row["experience_type"]:
-                tags.append(row["experience_type"])
+                tags.extend(t.strip() for t in row["experience_type"].split(",") if t.strip())
             tags.extend(_parse_audience_tags(row["audience_tags"])[:2])
         insights.append({
             "id":    row["event_id"]   if row else None,
@@ -687,7 +755,7 @@ def _compute_trending() -> dict:
         for p in placeholders:
             tags = []
             if p["experience_type"]:
-                tags.append(p["experience_type"])
+                tags.extend(t.strip() for t in p["experience_type"].split(",") if t.strip())
             tags.extend(_parse_audience_tags(p["audience_tags"])[:2])
             insights.append({
                 "id":    p["event_id"]   or None,
@@ -722,10 +790,10 @@ def get_trending():
         _set_mem_cache(cached)
         return cached
 
-    # Layer 3: full recompute (write to Supabase paused — re-enable when live)
+    # Layer 3: full recompute + write to both caches
     result = _compute_trending()
     _set_mem_cache(result)
-    # _set_trending_cache_sb(result["popular_now"], result["insights"], result["live"])
+    _set_trending_cache_sb(result["popular_now"], result["insights"], result["live"])
     return result
 
 

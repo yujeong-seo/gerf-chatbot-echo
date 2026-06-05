@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageShell from '../components/PageShell'
@@ -27,7 +27,7 @@ function getEventStatus() {
 
 function getDefaultVisitType(): VisitType {
   const now = new Date()
-  if (now < EVENT_START) return 'test' // should return to 'pre' once the testing is ended
+  if (now < EVENT_START) return 'pre'
   if (now <= EVENT_END)  return 'on'
   return 'post'
 }
@@ -121,9 +121,28 @@ export default function EntryPage() {
   const navigate = useNavigate()
   const status   = getEventStatus()
 
-  const [step,      setStep]      = useState<1 | 2>(1)
-  const [visitType, setVisitType] = useState<VisitType>(getDefaultVisitType())
-  const [name,      setName]      = useState('')
+  const [step,         setStep]         = useState<1 | 2>(1)
+  const [visitType,    setVisitType]    = useState<VisitType>(getDefaultVisitType())
+  const [name,         setName]         = useState('')
+  const [aboutMounted, setAboutMounted] = useState(false)
+  const [aboutShowing, setAboutShowing] = useState(false)
+
+  function openAbout() {
+    setAboutMounted(true)
+    setTimeout(() => setAboutShowing(true), 10)
+  }
+  function closeAbout() {
+    setAboutShowing(false)
+    setTimeout(() => setAboutMounted(false), 280)
+  }
+
+  // Close on Escape
+  useEffect(() => {
+    if (!aboutMounted) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') closeAbout() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [aboutMounted])
 
   function finish(skipName: boolean) {
     sessionStorage.setItem('echo_onboarded',  '1')
@@ -314,6 +333,35 @@ export default function EntryPage() {
           </div>
         </div>
 
+        {/* About this project */}
+        <button
+          onClick={openAbout}
+          aria-label="About this project"
+          className="flex items-center justify-center gap-1.5 flex-shrink-0"
+          style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }}
+        >
+          <span style={{ fontFamily: 'var(--font-main)', fontSize: 13, color: 'var(--echo-900)', opacity: 0.5 }}>
+            About this project
+          </span>
+          <span
+            style={{
+              width: 18, height: 18,
+              borderRadius: '50%',
+              border: '1.5px solid var(--echo-900)',
+              background: 'transparent',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              opacity: 0.4, flexShrink: 0,
+            }}
+          >
+            <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
+              <text x="7" y="11" textAnchor="middle"
+                style={{ font: '700 14px var(--font-accent)', fill: 'var(--echo-900)' }}>
+                ?
+              </text>
+            </svg>
+          </span>
+        </button>
+
         {/* Progress dots */}
         <div className="flex-shrink-0">
           <ProgressDots step={step} />
@@ -321,6 +369,63 @@ export default function EntryPage() {
 
         <div className="pb-safe flex-shrink-0" />
       </div>
+
+      {/* About modal */}
+      {aboutMounted && (
+        <div
+          onClick={closeAbout}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            background: 'rgba(0,0,0,0.18)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '24px',
+            opacity: aboutShowing ? 1 : 0,
+            transition: 'opacity 0.28s ease',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: '#FFFFFF',
+              borderRadius: 20,
+              padding: '32px 28px',
+              maxWidth: 360,
+              width: '100%',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
+              transform: aboutShowing ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(12px)',
+              transition: 'transform 0.3s cubic-bezier(0.34,1.2,0.64,1)',
+            }}
+          >
+            <h3 style={{
+              fontFamily: 'var(--font-accent)', fontWeight: 700, fontSize: 18,
+              color: 'var(--echo-900)', margin: '0 0 12px',
+            }}>
+              About ECHO
+            </h3>
+            <p style={{
+              fontFamily: 'var(--font-main)', fontSize: 14,
+              color: 'var(--stone-700)', lineHeight: 1.7, margin: '0 0 20px',
+            }}>
+              ECHO is a conversational assistant created for the Great Exhibition Road Festival 2026. 
+              It helps visitors discover events, plan their day, and reflect on their experience. 
+              <br></br>
+              This project is part of Design Engineering Master's Project. To learn more, come visit 2nd floor, Dyson building!
+            </p>
+            <button
+              onClick={closeAbout}
+              style={{
+                fontFamily: 'var(--font-main)', fontWeight: 600, fontSize: 14,
+                color: 'var(--primary-700)', background: 'none',
+                border: 'none', cursor: 'pointer', padding: 0,
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </PageShell>
   )
 }

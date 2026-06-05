@@ -11,8 +11,6 @@ import type { Keyword, InsightItem, LiveEvent } from '../types'
 
 const BUBBLE_PALETTE = ['#2E665E', '#D19350', '#6FBF8F', '#E5C14C', '#6F8AA5']
 
-const LIVE_TEXT_TEST = 'Moving through time: A dance experiment'
-
 const TEST_ACTIVITIES: InsightItem[] = [
   {
     id:          'family-stage-2026',
@@ -283,7 +281,7 @@ function ActivityCard({ item, index, blockIndex, isSelected, isLive }: ActivityC
   const chip = isLive ? (
     <RoundChip
       color="#299571"
-      label="Live Now"
+      label="Live Soon"
       icon={
         <div style={{ position: 'relative', width: 8, height: 8, flexShrink: 0 }}>
           <div style={{
@@ -402,12 +400,16 @@ function ActivityCard({ item, index, blockIndex, isSelected, isLive }: ActivityC
 
 // ── Live card ─────────────────────────────────────────────────────────────
 
-function LiveCard({ text, isSelected, onClick }: { text: string; isSelected?: boolean; onClick?: () => void }) {
+function LiveCard({ line1, line2, timeText, timeColor, chipLabel, chipColor, pulsing, bg, isSelected, onClick }: {
+  line1: string; line2?: string; timeText?: string; timeColor?: string
+  chipLabel: string; chipColor: string; pulsing?: boolean
+  bg?: string; isSelected?: boolean; onClick?: () => void
+}) {
   return (
     <div
       onClick={onClick}
       style={{
-        background:   '#d4e6df',
+        background:   bg ?? '#d4e6df',
         border:       isSelected ? '2px solid var(--primary-500)' : '1px solid #F0F0F0',
         borderRadius: 12,
         boxShadow:    'var(--shadow-card-light)',
@@ -422,34 +424,71 @@ function LiveCard({ text, isSelected, onClick }: { text: string; isSelected?: bo
         justifyContent: 'space-between',
         gap:            12,
       }}>
-        <p style={{
-          margin:        0,
-          fontFamily:    'var(--font-accent)',
-          fontWeight:    500,
-          fontSize:      14,
-          color:         'var(--stone-900)',
-          letterSpacing: 'var(--tr-main)',
-          lineHeight:    1.5,
-          flex:          1,
-        }}>
-          {text}
-        </p>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {/* Line 1 — heading */}
+          <p style={{
+            margin:        0,
+            fontFamily:    'var(--font-accent)',
+            fontWeight:    700,
+            fontSize:      15,
+            color:         'var(--stone-900)',
+            letterSpacing: 'var(--tr-accent)',
+            lineHeight:    1.3,
+          }}>
+            {line1}
+          </p>
+          {/* Line 2 — second sentence (main font) or time row */}
+          {timeText ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                stroke={timeColor ?? 'var(--stone-500)'} strokeWidth="2.2"
+                strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <span style={{
+                fontFamily:    'var(--font-main)',
+                fontSize:      13,
+                color:         timeColor ?? 'var(--stone-500)',
+                letterSpacing: 'var(--tr-main)',
+              }}>
+                {timeText}
+              </span>
+            </div>
+          ) : line2 ? (
+            <p style={{
+              margin:        0,
+              fontFamily:    'var(--font-main)',
+              fontWeight:    400,
+              fontSize:      14,
+              color:         'var(--stone-700)',
+              letterSpacing: 'var(--tr-main)',
+              lineHeight:    1.5,
+            }}>
+              {line2}
+            </p>
+          ) : null}
+        </div>
         <RoundChip
-          color="#299571"
-          label="Live Now"
-          icon={
+          color={chipColor}
+          label={chipLabel}
+          icon={pulsing ? (
             <div style={{ position: 'relative', width: 8, height: 8, flexShrink: 0 }}>
               <div style={{
                 position: 'absolute', inset: 0, borderRadius: '50%',
-                background: '#299571', animation: 'radiate-pulse 1.8s ease-out infinite',
+                background: chipColor, animation: 'radiate-pulse 1.8s ease-out infinite',
               }} />
-              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#299571' }} />
+              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: chipColor }} />
             </div>
-          }
+          ) : undefined}
         />
       </div>
     </div>
   )
+}
+
+function splitSentences(text: string): [string, string] {
+  const m = text.match(/^(.+?[.!])\s+(.+)$/)
+  return m ? [m[1], m[2]] : [text, '']
 }
 
 // ── Decorative rising chart ───────────────────────────────────────────────
@@ -570,22 +609,20 @@ export default function CommunityPage() {
   const [selectedInsight,   setSelectedInsight]   = useState<string | null>(null)
   const [selectedInsightId, setSelectedInsightId] = useState<string | null>(null)
   const [expanded,          setExpanded]          = useState(false)
-  const [modalMounted,    setModalMounted]    = useState(false)
-  const [modalShowing,    setModalShowing]    = useState(false)
+  const [modalMounted,      setModalMounted]      = useState(false)
+  const [modalShowing,      setModalShowing]      = useState(false)
 
-  const visitType      = sessionStorage.getItem('echo_visit_type') ?? 'on'
-  const usePlaceholder = visitType === 'test' || visitType === 'pre' || visitType === 'on' || visitType === 'post'
   const visitStatus = getVisitStatus()
 
   useEffect(() => {
-    if (usePlaceholder) {
-      setKeywords(generateFallbackKeywords())
-      setInsights(TEST_ACTIVITIES)
-      return
-    }
     fetchTrending().then(({ popular_now, insights: ins, live }) => {
-      setKeywords(popular_now.length ? popular_now : generateFallbackKeywords())
-      setInsights(ins)
+      if (popular_now.length === 0) {
+        setKeywords(generateFallbackKeywords())
+        setInsights(TEST_ACTIVITIES)
+      } else {
+        setKeywords(popular_now)
+        setInsights(ins)
+      }
       setLiveEvent(live)
     })
   }, [])
@@ -641,8 +678,86 @@ export default function CommunityPage() {
     navigate('/chat')
   }
 
-  const liveText: string | null = usePlaceholder ? LIVE_TEXT_TEST : (liveEvent?.title ?? null)
-  const liveId:   string | null = usePlaceholder ? 'moving-through-time-a-dance-experiment' : (liveEvent?.event_id ?? null)
+  // One-step direct navigation for contextual live states (not upcoming — that uses handleInsight)
+  function handleLiveCard() {
+    let agent: string
+    let display: string
+    if (!liveEvent || liveEvent.type === 'upcoming') return
+    if (liveEvent.type === 'drop_in') {
+      agent   = '<<P>> Show me the drop-in events happening now at the festival'
+      display = 'Show me the drop-in events happening now at the festival'
+    } else if (liveEvent.type === 'pre_festival') {
+      agent   = '<<P>> What can I see at the Great Exhibition Road Festival?'
+      display = 'What can I see at the Great Exhibition Road Festival?'
+    } else {
+      agent   = 'I want to share my experience'
+      display = 'I want to share my experience'
+    }
+    sessionStorage.setItem('echo_community_query', JSON.stringify({ display, agent }))
+    navigate('/chat')
+  }
+
+  function renderLiveBlock() {
+    if (!liveEvent) return null
+
+    if (liveEvent.type === 'upcoming') {
+      const timeStr = liveEvent.time_start
+        ? (liveEvent.time_end ? `${liveEvent.time_start} – ${liveEvent.time_end}` : liveEvent.time_start)
+        : undefined
+      return (
+        <LiveCard
+          line1={liveEvent.title}
+          timeText={timeStr}
+          timeColor="#2E665E"
+          chipLabel="Coming Up"
+          chipColor="#3F8579"
+          isSelected={selectedInsight === liveEvent.title}
+          onClick={() => handleInsight(liveEvent.title, liveEvent.event_id)}
+        />
+      )
+    }
+
+    if (liveEvent.type === 'drop_in') {
+      const [l1, l2] = splitSentences(liveEvent.text)
+      return (
+        <LiveCard
+          line1={l1} line2={l2}
+          chipLabel="Live Now"
+          chipColor="#299571"
+          pulsing
+          onClick={handleLiveCard}
+        />
+      )
+    }
+
+    if (liveEvent.type === 'pre_festival') {
+      const [l1, l2] = splitSentences(liveEvent.text)
+      return (
+        <LiveCard
+          line1={l1} line2={l2}
+          chipLabel="Coming Soon"
+          chipColor="#6F8AA5"
+          bg="#e8eef3"
+          onClick={handleLiveCard}
+        />
+      )
+    }
+
+    if (liveEvent.type === 'post_festival') {
+      const [l1, l2] = splitSentences(liveEvent.text)
+      return (
+        <LiveCard
+          line1={l1} line2={l2}
+          chipLabel="Festival Ended"
+          chipColor="#B89A5A"
+          bg="#f3efe8"
+          onClick={handleLiveCard}
+        />
+      )
+    }
+
+    return null
+  }
 
   const SECTION_PY = 30
 
@@ -761,13 +876,7 @@ export default function CommunityPage() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {liveText !== null && (
-              <LiveCard
-                text={liveText}
-                isSelected={selectedInsight === liveText}
-                onClick={() => handleInsight(liveText, liveId ?? undefined)}
-              />
-            )}
+            {renderLiveBlock()}
             {insights.slice(0, 3).map((item, i) => (
               <div key={item.title} onClick={() => handleInsight(item.title, item.id)} style={{ cursor: 'pointer' }}>
                 <ActivityCard item={item} index={i} blockIndex={i} isSelected={selectedInsight === item.title} />

@@ -9,8 +9,9 @@ Pipeline:
   1. Load full conversation history from SQLite (rag/gerf_sessions.db)
   2. Score message-level sentiment (keyword-based, no API call)
   3. LLM-extract structured insights → session_profile, interactions, feedback
-  4. Save all three to Supabase
-  5. Delete temporary SQLite logs  ← only runs after successful Supabase write
+  4. Enrich event_zone using SQLite events+zones lookup (overrides LLM guess)
+  5. Save all three to Supabase
+  6. Delete temporary SQLite logs  ← only runs after successful Supabase write
 """
 import sqlite3
 from pathlib import Path
@@ -24,7 +25,31 @@ from .supabase_store import (
     save_test_session_profile,
 )
 
-_DB_FILE = Path(__file__).parent.parent.parent / "rag" / "gerf_sessions.db"
+_DB_FILE    = Path(__file__).parent.parent.parent / "rag" / "gerf_sessions.db"
+_EVENTS_DB  = Path(__file__).parent.parent.parent / "rag" / "gerf_2026.db"
+
+
+def _enrich_with_zones(interactions: list[dict]) -> list[dict]:
+    """Override event_zone with the DB-sourced zone for each interaction that has
+    an event_or_activity name. Performs a LIKE lookup against the events+zones
+    tables so zone assignment is always grounded in the actual festival data."""
+    if not _EVENTS_DB.exists():
+        return interactions
+    conn = sqlite3.connect(str(_EVENTS_DB))
+    conn.row_factory = sqlite3.Row
+    for ia in interactions:
+        activity = ia.get("event_or_activity")
+        if activity:
+            row = conn.execute(
+                "SELECT z.title FROM events e "
+                "JOIN zones z ON e.zone_id = z.zone_id "
+                "WHERE lower(e.title) LIKE lower(?) LIMIT 1",
+                (f"%{activity}%",),
+            ).fetchone()
+            if row:
+                ia["event_zone"] = row["title"]
+    conn.close()
+    return interactions
 
 
 def _load_full_history(thread_id: str) -> tuple[list[dict], str | None, str | None]:
@@ -101,7 +126,7 @@ def parse_session(thread_id: str) -> dict:
         return {"status": "error", "thread_id": thread_id, "detail": str(e)}
 
     session_profile = parsed.get("session_profile", {})
-    interactions    = parsed.get("interactions", [])
+    interactions    = _enrich_with_zones(parsed.get("interactions", []))
     feedback        = parsed.get("feedback_entries", [])
 
     try:
