@@ -16,7 +16,6 @@
 -- One row per chat session. Written once when the session expires (60 min idle).
 CREATE TABLE IF NOT EXISTS session_profiles (
     session_id           TEXT PRIMARY KEY,
-    profile_type         TEXT,                        -- 'anonymous' | future types
     interest_tags        TEXT[],
     chat_topics          TEXT[],
     audience_type        TEXT,

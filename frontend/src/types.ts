@@ -71,13 +71,11 @@ export interface InsightItem {
   tags:        string[]
 }
 
-export interface LiveEvent {
-  title:       string
-  event_id:    string
-  venue?:      string
-  time_start?: string
-  time_end?:   string
-}
+export type LiveEvent =
+  | { type: 'upcoming';     title: string; event_id: string; venue?: string; time_start?: string; time_end?: string }
+  | { type: 'drop_in';      text: string }
+  | { type: 'pre_festival'; text: string }
+  | { type: 'post_festival'; text: string }
 
 export type EventPhase = 'before' | 'live' | 'after'
 

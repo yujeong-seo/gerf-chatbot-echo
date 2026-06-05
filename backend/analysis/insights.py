@@ -20,7 +20,6 @@ Analyse the conversation below and extract structured data.
 Return ONLY valid JSON with this exact structure:
 {{
   "session_profile": {{
-    "profile_type": "anonymous",
     "interest_tags": ["<tag>", ...],
     "chat_topics": ["<topic>", ...],
     "engagement_preferences": {{
@@ -31,10 +30,10 @@ Return ONLY valid JSON with this exact structure:
   }},
   "interactions": [
     {{
-      "interaction_summary": "<short phrase, 3-7 words describing what was discussed, e.g. 'Robotics demo and engineering hands-on', 'Music and family stage performance', 'Interactive science for children'>",
+      "interaction_summary": "<short phrase, do not contain verbs, 3-7 words describing what was discussed, e.g. 'Robotics demo and engineering hands-on', 'Music and family stage performance', 'Interactive science for children'>",
       "interaction_stage": "<pre|on|post>",
-      "event_zone": "<zone name or null>",
-      "event_or_activity": "<activity name or null>",
+      "event_zone": "<one of the festival's physical zone names if identifiable — e.g. 'Family Fun Zone', 'Adults Only Zone', 'NextGen Zone', 'Happiness and Health Zone', 'Outdoor Stage', 'Discovery Zone' — or null. Do not invent a zone name; if unsure, use null>",
+      "event_or_activity": "<the specific activity or event title discussed, as close to the actual name as possible, or null>",
       "sentiment": {{
         "overall": "<positive|negative|confused|neutral>",
         "tone": "<brief description>"
@@ -66,7 +65,8 @@ Rules:
 - feedback_entries: only include if the user expressed clear opinions or reflections (0 to 3 entries)
 - feedback_entries feedback_stage must always be "natural" (post-session organic capture)
 - feedback_entries interaction_stage: "pre" | "on" | "post" based on when in the visit the conversation occurred
-- If no clear event zone or activity is mentioned, use null
+- event_zone must be one of the festival's named physical zones — do not invent or guess; if uncertain, use null (the system will look it up from the database using event_or_activity)
+- event_or_activity should be the exact or closest known activity/event title mentioned; if unclear, use null
 - interaction_stage in interactions defaults to "on" unless the conversation clearly indicates pre or post
 - Use only data present in the conversation — do not invent details
 

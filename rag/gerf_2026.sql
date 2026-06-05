@@ -2164,9 +2164,382 @@ INSERT INTO event_sessions (event_id, date, time_start, time_end, session_notes)
 ('the-great-exhibition-and-the-royal-parks-walking-tour', 'Sunday 7 June',   '16:15', '17:15', NULL);
 
 -- =============================================================================
--- END OF FILE
 -- Counts:
 --   zones:          8 rows
 --   events:        75 rows  (39 zoned + 36 unzoned/cross-venue)
 --   event_sessions: 72 rows (14 multi-slot events)
+-- =============================================================================
+
+-- =============================================================================
+-- Great Exhibition Road Festival 2026 — Discover Design Engineering Add-on
+-- Source: GERF_Design_Engineering_Activities CSV + parent event page
+-- =============================================================================
+
+-- ---------------------------------------------------------------------------
+-- GROUND FLOOR — Exhibits & Activities
+-- ---------------------------------------------------------------------------
+
+INSERT INTO events VALUES (
+    'dde-new-manufacturing-technologies', NULL,
+    'New Manufacturing Technologies',
+    'Dyson Building, Imperial College London', 'Ground Floor',
+    'Imperial College Road, London SW7 2DB',
+    51.49795, -0.17449,
+    'Both', '12:00–18:00', 0,
+    'Dr Nan Li and her research team showcase AI-driven design for optimising vehicle components and technologies for advanced materials and sheet forming in automotive and aerospace applications.',
+    'Dr Nan Li and her research team showcase their work on AI-driven design for optimising vehicle components and technologies for advanced materials and sheet forming in automotive and aerospace applications.',
+    'Exhibit',
+    'Adults, Young People (13–25)',
+    'All ages', 0, NULL, 0,
+    NULL, NULL, 0, 0, 0, NULL,
+    'drop-in', NULL, NULL,
+    NULL,
+    'https://www.greatexhibitionroadfestival.co.uk/event/discover-design-engineering/'
+);
+
+INSERT INTO events VALUES (
+    'dde-cycle-helmet-challenge', NULL,
+    'Cycle Helmet Challenge',
+    'Dyson Building, Imperial College London', 'Ground Floor',
+    'Imperial College Road, London SW7 2DB',
+    51.49795, -0.17449,
+    'Both', '12:00–18:00', 0,
+    'The Head Lab research team invite visitors to try cycle helmet testing as part of an exhibit on their work establishing a rating system for cycle helmets and analysis of head injuries on the brain.',
+    'The Head Lab research team invite visitors to try out cycle helmet testing as part of an exhibit showing their work on establishing a rating system for cycle helmets and research into the effects of head injuries on the brain.',
+    'Exhibit, Activity',
+    'Adults, Young People (13–25)',
+    'All ages', 0, NULL, 0,
+    NULL, NULL, 0, 0, 0, NULL,
+    'drop-in', NULL, NULL,
+    NULL,
+    'https://www.greatexhibitionroadfestival.co.uk/event/discover-design-engineering/'
+);
+
+INSERT INTO events VALUES (
+    'dde-team-repair-microscope', NULL,
+    'Team Repair: Microscope Activity',
+    'Dyson Building, Imperial College London', 'Ground Floor',
+    'Imperial College Road, London SW7 2DB',
+    51.49795, -0.17449,
+    'Sunday', '12:00–18:00', 0,
+    'A hands-on repair workshop where participants work in pairs to diagnose and fix a microscope, learning about assembly, fault diagnosis and lens focal lengths — encouraging problem-solving, sustainability and confidence in repair.',
+    'A hands-on repair workshop where participants work in pairs to diagnose and fix a microscope. They will learn how the microscope is assembled, identify faults such as a missing lens or battery terminal issue, test lens focal lengths, and reassemble the microscope before using it. The session encourages problem-solving, sustainability, and confidence in repairing products rather than throwing them away.',
+    'Workshop',
+    'Family (ages 5+)',
+    'Ages 8+', 8, NULL, 0,
+    NULL, NULL, 0, 0, 0, NULL,
+    'free-ticket',
+    'https://www.signupgenius.com/go/10C0445AAAA2FA0FBC07-64439026-microscope',
+    NULL,
+    NULL,
+    'https://www.greatexhibitionroadfestival.co.uk/event/discover-design-engineering/'
+);
+
+INSERT INTO events VALUES (
+    'dde-sustainable-healthcare', NULL,
+    'Sustainable Healthcare',
+    'Dyson Building, Imperial College London', 'Ground Floor',
+    'Imperial College Road, London SW7 2DB',
+    51.49795, -0.17449,
+    'Both', '12:00–18:00', 0,
+    'Dyson School researchers showcase work developing more sustainable systems in healthcare whilst creating healthier hospital environments, in collaboration with the NHS.',
+    'As part of work with the NHS, Dyson School researchers showcase their work developing more sustainable systems in healthcare whilst creating healthier hospital environments.',
+    'Exhibit, Activity',
+    'Adults, Young People (13–25)',
+    'All ages', 0, NULL, 0,
+    NULL, NULL, 0, 0, 0, NULL,
+    'drop-in', NULL, NULL,
+    NULL,
+    'https://www.greatexhibitionroadfestival.co.uk/event/discover-design-engineering/'
+);
+
+INSERT INTO events VALUES (
+    'dde-human-centred-design-projects', NULL,
+    'Human-Centred Design Engineering Projects',
+    'Dyson Building, Imperial College London', 'Ground Floor',
+    'Imperial College Road, London SW7 2DB',
+    51.49795, -0.17449,
+    'Both', '12:00–18:00', 0,
+    'A collection of team-based projects from first-year design engineering students investigating and developing solutions for human challenges and opportunities.',
+    'A collection of team-based projects from first-year design engineering students investigating and developing solutions for human challenges and opportunities.',
+    'Exhibit',
+    'Adults, Young People (13–25)',
+    'All ages', 0, NULL, 0,
+    NULL, NULL, 0, 0, 0, NULL,
+    'drop-in', NULL, NULL,
+    NULL,
+    'https://www.greatexhibitionroadfestival.co.uk/event/discover-design-engineering/'
+);
+
+INSERT INTO events VALUES (
+    'dde-vr-gravity-sketch', NULL,
+    'VR Gravity Sketch Tryouts',
+    'Dyson Building, Imperial College London', 'Ground Floor',
+    'Imperial College Road, London SW7 2DB',
+    51.49795, -0.17449,
+    'Both', '12:00–18:00', 0,
+    'Experience immersive creativity by trying out Gravity Sketch, a virtual reality design programme and highly successful spinout from the Dyson School of Design Engineering.',
+    'Experience immersive creativity trying out the virtual reality design programme Gravity Sketch — a highly successful spinout from the Dyson School of Design Engineering.',
+    'Exhibit',
+    'Adults, Young People (13–25)',
+    'All ages', 0, NULL, 0,
+    NULL, NULL, 0, 0, 0, NULL,
+    'drop-in', NULL, NULL,
+    NULL,
+    'https://www.greatexhibitionroadfestival.co.uk/event/discover-design-engineering/'
+);
+
+-- ---------------------------------------------------------------------------
+-- OUTDOOR AREA — Vehicles & Mobility
+-- ---------------------------------------------------------------------------
+
+INSERT INTO events VALUES (
+    'dde-microlino-vehicle', NULL,
+    'The Microlino Vehicle',
+    'Dyson Building, Imperial College London', 'Outdoor Area',
+    'Imperial College Road, London SW7 2DB',
+    51.49795, -0.17449,
+    'Both', '12:00–18:00', 0,
+    'The innovative Microlino electric micro vehicle is parked outside the Dyson School as inspiration for taking part in the Micro Mobility Challenge.',
+    'As inspiration for taking part in the Micro Mobility Challenge, the innovative Microlino electric micro vehicle is parked outside the Dyson School of Design Engineering.',
+    'Exhibit',
+    'Adults, Young People (13–25)',
+    'All ages', 0, NULL, 0,
+    NULL, NULL, 0, 0, 0, NULL,
+    'drop-in', NULL, NULL,
+    NULL,
+    'https://www.greatexhibitionroadfestival.co.uk/event/discover-design-engineering/'
+);
+
+INSERT INTO events VALUES (
+    'dde-micro-mobility-challenge', NULL,
+    'Micro Mobility Challenge',
+    'Dyson Building, Imperial College London', 'Outdoor Area',
+    'Imperial College Road, London SW7 2DB',
+    51.49795, -0.17449,
+    'Both', '12:00–18:00', 0,
+    'A hands-on activity inviting visitors to gain insights into the complexity of designing and engineering vehicles as an integrated part of city transport systems — working in teams to design, build and test a micromobility vehicle.',
+    'This hands-on activity invites visitors to gain insights into the complexity of designing and engineering vehicles as an integrated part of city transport systems. Taking part, you will work in teams to design, build and test a micromobility vehicle taking account of a number of constraints allocated to you. You will test your vehicle in competition with others and have a visual record of your work. The activity is led by students from the world-leading joint Imperial RCA Innovation Design Engineering programme.',
+    'Workshop',
+    'Adults, Young People (13–25)',
+    'All ages', 0, NULL, 0,
+    NULL, NULL, 0, 0, 0, NULL,
+    'drop-in', NULL, NULL,
+    NULL,
+    'https://www.greatexhibitionroadfestival.co.uk/event/discover-design-engineering/'
+);
+
+-- ---------------------------------------------------------------------------
+-- 1ST FLOOR — Music & Talks
+-- ---------------------------------------------------------------------------
+
+INSERT INTO events VALUES (
+    'dde-magnetic-resonator-piano', NULL,
+    'Magnetic Resonator Piano',
+    'Dyson Building, Imperial College London', '1st Floor',
+    'Imperial College Road, London SW7 2DB',
+    51.49795, -0.17449,
+    'Both', '12:00–18:00', 0,
+    'An augmented acoustic grand piano using electromagnets to vibrate the strings — a hybrid acoustic-electronic instrument creating new sounds without speakers. Visitors can try it out.',
+    'An augmented acoustic grand piano using electromagnets to vibrate the strings. The Magnetic Resonator Piano is a hybrid acoustic-electronic instrument to create new sounds acoustically without the need for speakers. Visitors can try it out for themselves.',
+    'Exhibit, Activity',
+    'Adults, Young People (13–25)',
+    'All ages', 0, NULL, 0,
+    NULL, NULL, 0, 0, 0, NULL,
+    'drop-in', NULL, NULL,
+    NULL,
+    'https://www.greatexhibitionroadfestival.co.uk/event/discover-design-engineering/'
+);
+
+-- Saturday talks (1st Floor)
+
+INSERT INTO events VALUES (
+    'dde-talk-sustainable-batteries', NULL,
+    'Talk: Sustainable Batteries — Drs Chandra George & Andrew Shevchuk',
+    'Dyson Building, Imperial College London', '1st Floor',
+    'Imperial College Road, London SW7 2DB',
+    51.49795, -0.17449,
+    'Saturday', '13:00–13:40', 0,
+    'Chandra George, a tutor and academic at the Dyson School, explores innovative approaches to the materials, construction and sustainability of batteries in all their forms.',
+    'Chandra George, a tutor and academic at the Dyson School of Design Engineering and chemical engineer, explores innovative approaches for the materials, construction and sustainability of batteries in all their forms.',
+    'Talk & Tour',
+    'Adults, Young People (13–25)',
+    'All ages', 0, NULL, 0,
+    NULL, NULL, 0, 0, 0, NULL,
+    'drop-in', NULL, NULL,
+    NULL,
+    'https://www.greatexhibitionroadfestival.co.uk/event/discover-design-engineering/'
+);
+
+INSERT INTO events VALUES (
+    'dde-talk-life-as-design-student-sat', NULL,
+    'Talk: Life as a Design Engineering Student — Linda Liu (Saturday)',
+    'Dyson Building, Imperial College London', '1st Floor',
+    'Imperial College Road, London SW7 2DB',
+    51.49795, -0.17449,
+    'Saturday', '14:00–14:40', 0,
+    'Linda Liu, President of the Imperial College Design Engineering Society (DesSoc), talks about the wider experience of studying Design Engineering at Imperial — covering work, rest and play for students in the School.',
+    'Linda Liu is the President of the student-led Imperial College Design Engineering Society (DesSoc). She is ideally placed to talk about the wider experience of studying Design Engineering at Imperial and the very full lives of work, rest and play for students in the School.',
+    'Talk & Tour',
+    'Adults, Young People (13–25)',
+    'All ages', 0, NULL, 0,
+    NULL, NULL, 0, 0, 0, NULL,
+    'drop-in', NULL, NULL,
+    NULL,
+    'https://www.greatexhibitionroadfestival.co.uk/event/discover-design-engineering/'
+);
+
+INSERT INTO events VALUES (
+    'dde-talk-ai-energy-markets', NULL,
+    'Talk: AI-Based Energy Markets — Javier de la Fuente Guillen',
+    'Dyson Building, Imperial College London', '1st Floor',
+    'Imperial College Road, London SW7 2DB',
+    51.49795, -0.17449,
+    'Saturday', '15:00–15:40', 0,
+    'A 4th-year design engineering student presents his Masters project: a peer-to-peer app for households to buy and sell electricity through AI-based energy markets.',
+    'Javier, a 4th-year design engineering student, talks about his Masters project — a P2P (householder-to-householder) app for buying and selling electricity through AI-based energy markets.',
+    'Talk & Tour',
+    'Adults, Young People (13–25)',
+    'All ages', 0, NULL, 0,
+    NULL, NULL, 0, 0, 0, NULL,
+    'drop-in', NULL, NULL,
+    NULL,
+    'https://www.greatexhibitionroadfestival.co.uk/event/discover-design-engineering/'
+);
+
+-- Sunday talks (1st Floor)
+
+INSERT INTO events VALUES (
+    'dde-talk-ghost-circuits', NULL,
+    'Talk: Ghost Circuits — Professor Thrish Nanayakkara',
+    'Dyson Building, Imperial College London', '1st Floor',
+    'Imperial College Road, London SW7 2DB',
+    51.49795, -0.17449,
+    'Sunday', '13:00–13:40', 0,
+    'World-leading academic in soft robotics Professor Thrish Nanayakkara talks about inspiration from nature for robotics design, including insights from his recently published book Ghost Circuits.',
+    'Thrish Nanayakkara, a world-leading academic in soft robotics, talks about inspiration from nature for robotics design and the subject of his recently published book: Ghost Circuits.',
+    'Talk & Tour',
+    'Adults, Young People (13–25)',
+    'All ages', 0, NULL, 0,
+    NULL, NULL, 0, 0, 0, NULL,
+    'drop-in', NULL, NULL,
+    NULL,
+    'https://www.greatexhibitionroadfestival.co.uk/event/discover-design-engineering/'
+);
+
+INSERT INTO events VALUES (
+    'dde-talk-study-design-engineering', NULL,
+    'Talk: Study Design Engineering — Dr Freddie Page',
+    'Dyson Building, Imperial College London', '1st Floor',
+    'Imperial College Road, London SW7 2DB',
+    51.49795, -0.17449,
+    'Sunday', '14:00–14:40', 0,
+    'Dr Freddie Page, Director of Undergraduate Studies for the Imperial and Dyson School MEng course in Design Engineering, provides an overview of what the course involves and why the subject matters for future generations.',
+    'Freddie Page is the Director of Undergraduate Studies for the Imperial and Dyson School MEng course in Design Engineering. He provides an overview of what the course involves and why the subject is so important for future generations.',
+    'Talk & Tour',
+    'Adults, Young People (13–25)',
+    'All ages', 0, NULL, 0,
+    NULL, NULL, 0, 0, 0, NULL,
+    'drop-in', NULL, NULL,
+    NULL,
+    'https://www.greatexhibitionroadfestival.co.uk/event/discover-design-engineering/'
+);
+
+INSERT INTO events VALUES (
+    'dde-talk-life-as-design-student-sun', NULL,
+    'Talk: Life as a Design Engineering Student — Linda Liu (Sunday)',
+    'Dyson Building, Imperial College London', '1st Floor',
+    'Imperial College Road, London SW7 2DB',
+    51.49795, -0.17449,
+    'Sunday', '15:00–15:40', 0,
+    'Linda Liu, President of the Imperial College Design Engineering Society (DesSoc), talks about the wider experience of studying Design Engineering at Imperial — covering work, rest and play for students in the School.',
+    'Linda Liu is the President of the student-led Imperial College Design Engineering Society (DesSoc). She is ideally placed to talk about the wider experience of studying Design Engineering at Imperial and the very full lives of work, rest and play for students in the School.',
+    'Talk & Tour',
+    'Adults, Young People (13–25)',
+    'All ages', 0, NULL, 0,
+    NULL, NULL, 0, 0, 0, NULL,
+    'drop-in', NULL, NULL,
+    NULL,
+    'https://www.greatexhibitionroadfestival.co.uk/event/discover-design-engineering/'
+);
+
+-- ---------------------------------------------------------------------------
+-- 2ND FLOOR — Student Project Exhibits
+-- ---------------------------------------------------------------------------
+
+INSERT INTO events VALUES (
+    'dde-beyond-footwear', NULL,
+    'Beyond Footwear',
+    'Dyson Building, Imperial College London', '2nd Floor',
+    'Imperial College Road, London SW7 2DB',
+    51.49795, -0.17449,
+    'Both', '12:00–18:00', 0,
+    'A collection of projects exploring how footwear can move beyond fashion to address real-world needs through sustainability, safety and performance-driven innovation.',
+    'A collection of projects exploring how footwear can move beyond fashion to address real-world needs through sustainability, safety and performance-driven innovation.',
+    'Exhibit',
+    'Adults, Young People (13–25)',
+    'All ages', 0, NULL, 0,
+    NULL, NULL, 0, 0, 0, NULL,
+    'drop-in', NULL, NULL,
+    NULL,
+    'https://www.greatexhibitionroadfestival.co.uk/event/discover-design-engineering/'
+);
+
+INSERT INTO events VALUES (
+    'dde-masters-projects', NULL,
+    'Master''s Projects',
+    'Dyson Building, Imperial College London', '2nd Floor',
+    'Imperial College Road, London SW7 2DB',
+    51.49795, -0.17449,
+    'Both', '12:00–18:00', 0,
+    'Projects from the graduating MEng Design Engineering cohort tackling a diverse range of topics from sustainability to robotics, with prototypes and practical demonstrations of innovation.',
+    'Projects from the graduating cohort of the Dyson School''s MEng Design Engineering programme tackling a very diverse range of topics from sustainability to robotics and many things in between, producing prototypes and practical demonstrations of innovation.',
+    'Exhibit, Activity',
+    'Adults, Young People (13–25)',
+    'All ages', 0, NULL, 0,
+    NULL, NULL, 0, 0, 0, NULL,
+    'drop-in', NULL, NULL,
+    NULL,
+    'https://www.greatexhibitionroadfestival.co.uk/event/discover-design-engineering/'
+);
+
+INSERT INTO events VALUES (
+    'dde-enterprise-projects-ero', NULL,
+    'Enterprise Projects (ERO)',
+    'Dyson Building, Imperial College London', '2nd Floor',
+    'Imperial College Road, London SW7 2DB',
+    51.49795, -0.17449,
+    'Both', '12:00–18:00', 0,
+    'Dyson School students showcase their Enterprise Roll Out (ERO) ventures — real-world potential businesses, many of which have grown into award-winning enterprises with employment and growth.',
+    'Dyson School of Design Engineering students have a fourth-year course where they work in teams to develop a venture with real-world potential — Enterprise Roll Out (ERO). Over the years a number of these projects have developed into award-winning enterprises with growth and employment.',
+    'Exhibit',
+    'Adults, Young People (13–25)',
+    'All ages', 0, NULL, 0,
+    NULL, NULL, 0, 0, 0, NULL,
+    'drop-in', NULL, NULL,
+    NULL,
+    'https://www.greatexhibitionroadfestival.co.uk/event/discover-design-engineering/'
+);
+
+INSERT INTO events VALUES (
+    'dde-2nd-year-design-projects', NULL,
+    '2nd Year Design Engineering Team Projects',
+    'Dyson Building, Imperial College London', '2nd Floor',
+    'Imperial College Road, London SW7 2DB',
+    51.49795, -0.17449,
+    'Both', '12:00–18:00', 0,
+    'Teams of 2nd-year Design Engineering students present product concepts improving experiences and functions for underserved groups — and use the festival as an opportunity to gather public feedback.',
+    'Teams of students working on their 2nd Year Design Engineering projects, using the opportunity to get feedback on the development of product concepts to improve experiences and functions for underserved groups.',
+    'Exhibit, Activity',
+    'Adults, Young People (13–25)',
+    'All ages', 0, NULL, 0,
+    NULL, NULL, 0, 0, 0, NULL,
+    'drop-in', NULL, NULL,
+    NULL,
+    'https://www.greatexhibitionroadfestival.co.uk/event/discover-design-engineering/'
+);
+
+-- =============================================================================
+-- END OF DESIGN ENGINEERING ACTIVITIES
+-- 19 events 
 -- =============================================================================
