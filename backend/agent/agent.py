@@ -295,22 +295,22 @@ def run_agent(
             _res       = _get_action_agent().invoke({"input": enriched})
             output     = _res["output"]
             tool_calls = [
-                {"tool": a.tool, "input": str(a.tool_input)}
-                for a, _ in _res.get("intermediate_steps", [])
+                {"tool": a.tool, "input": str(a.tool_input), "output": str(obs)}
+                for a, obs in _res.get("intermediate_steps", [])
             ]
         else:  # DISCOVERY — handles event search, FAQ, logistics, and any slipthrough
             _res       = get_agent().invoke({"input": enriched})
             output     = _res["output"]
             tool_calls = [
-                {"tool": a.tool, "input": str(a.tool_input)}
-                for a, _ in _res.get("intermediate_steps", [])
+                {"tool": a.tool, "input": str(a.tool_input), "output": str(obs)}
+                for a, obs in _res.get("intermediate_steps", [])
             ]
     else:
         result     = get_agent().invoke({"input": enriched})
         output     = result["output"]
         tool_calls = [
-            {"tool": action.tool, "input": str(action.tool_input)}
-            for action, _obs in result.get("intermediate_steps", [])
+            {"tool": action.tool, "input": str(action.tool_input), "output": str(obs)}
+            for action, obs in result.get("intermediate_steps", [])
         ]
 
     if thread_id:
@@ -321,6 +321,24 @@ def run_agent(
         except (json.JSONDecodeError, AttributeError):
             response_text = output
             mentioned = []
+
+        # Fallback: if agent omitted mentioned_events, reconstruct from tool observations.
+        # get_event_by_id input IS the slug; search_events output contains "event_id: slug" lines.
+        if not mentioned:
+            import re as _re
+            seen: list[str] = []
+            for tc in tool_calls:
+                if tc["tool"] == "get_event_by_id":
+                    slug = tc["input"].strip().strip("\"'")
+                    if slug and slug not in seen:
+                        seen.append(slug)
+                elif tc["tool"] == "search_events":
+                    for m in _re.finditer(r"event_id:\s*(\S+)", tc.get("output", "")):
+                        slug = m.group(1).strip()
+                        if slug and slug not in seen:
+                            seen.append(slug)
+            if seen:
+                mentioned = [{"n": i + 1, "id": slug} for i, slug in enumerate(seen)]
 
         # Prepend compact event-ID annotation so the next turn can resolve references
         if mentioned:

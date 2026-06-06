@@ -64,44 +64,56 @@ def get_event_url(query: str) -> str | None:
 
 @tool
 def maps_url_tool(query: str) -> str:
-    """Get a Google Maps link for a GERF event's location.
+    """Get directions to a GERF event location.
 
     Input: the exact event title or event_id (e.g. "Family Stage" or
     "family-stage-2026"). Use when the user asks how to find, navigate
     to, or get directions to a specific event.
+
+    IMPORTANT: this tool does NOT return a URL. After calling it, include
+    maps_event_id in your JSON sidecar — the frontend renders the map card.
+    Never put any URL or link in the response field.
     """
     row = _find_event(query)
     if not row:
         return f"No location data found for '{query}'."
 
-    if row["lat"] and row["lng"]:
-        url = f"https://maps.google.com/?q={row['lat']},{row['lng']}"
-    elif row["venue_address"]:
-        url = f"https://maps.google.com/?q={urllib.parse.quote_plus(row['venue_address'])}"
-    else:
-        return f"No coordinates or address available for '{row['title']}'."
+    has_map = bool((row["lat"] and row["lng"]) or row["venue_address"])
+    if not has_map:
+        return f"No map coordinates available for '{row['title']}'."
 
     venue = row["venue_name"] or row["venue_address"] or row["title"]
-    return f"[Get directions to {row['title']} ({venue})]({url})"
+    return (
+        f"Map ready for {row['title']} at {venue}. "
+        f"Add to your JSON: \"maps_event_id\": \"{row['event_id']}\". "
+        "Do NOT include any URL or link in the response field."
+    )
 
 
 @tool
 def event_url_tool(query: str) -> str:
-    """Get the official Great Exhibition Road Festival page for a GERF event.
+    """Get the official festival page for a GERF event.
 
     Input: the exact event title or event_id (e.g. "Science Cabaret" or
-    "science-cabaret-2026"). Use when the user wants full details, photos,
-    or to book tickets.
+    "science-cabaret-2026"). Use when the user wants full event details
+    or to access the official event page.
+
+    IMPORTANT: this tool does NOT return a URL. After calling it, include
+    detail_event_id in your JSON sidecar — the frontend renders the link.
+    Never put any URL or link in the response field.
     """
     row = _find_event(query)
     if not row:
-        return f"No website URL found for '{query}'."
+        return f"No event page found for '{query}'."
 
-    url = row["event_url"]
-    if not url:
-        return f"No website URL available for '{row['title']}'."
+    if not row["event_url"]:
+        return f"No event page available for '{row['title']}'."
 
-    return f"[View {row['title']} on the festival website]({url})"
+    return (
+        f"Event page ready for {row['title']}. "
+        f"Add to your JSON: \"detail_event_id\": \"{row['event_id']}\". "
+        "Do NOT include any URL or link in the response field."
+    )
 
 
 @tool

@@ -207,11 +207,18 @@ def _get_booking_info(event_id: str) -> dict | None:
         return None
     conn = sqlite3.connect(str(_EVENTS_DB))
     conn.row_factory = sqlite3.Row
+    # Try exact event_id match first, then title LIKE match (agent may pass title string)
     row = conn.execute(
         "SELECT title, booking_url, registration_type, arrival_notes "
         "FROM events WHERE event_id = ?",
         (event_id,),
     ).fetchone()
+    if not row:
+        row = conn.execute(
+            "SELECT title, booking_url, registration_type, arrival_notes "
+            "FROM events WHERE title LIKE ? ORDER BY LENGTH(title) LIMIT 1",
+            (f"%{event_id}%",),
+        ).fetchone()
     conn.close()
     if not row or not row["booking_url"]:
         return None
@@ -361,6 +368,42 @@ def chat(req: ChatRequest):
                     )
                 break
 
+    # Fallback: if agent called event_url_tool but didn't emit detail_event_id in JSON.
+    if event_url is None:
+        for tc in tool_calls:
+            if tc["tool"] == "event_url_tool":
+                slug = tc["input"].strip().strip("\"'")
+                url  = get_event_url(slug)
+                if url:
+                    event_url  = url
+                    event_name = _get_event_title(slug) or slug
+                break
+
+    # Fallback: agent retrieved full event detail via get_event_by_id but never called
+    # event_url_tool — attach the event page link so the ExternalLinkIcon always appears.
+    if event_url is None:
+        for tc in tool_calls:
+            if tc["tool"] == "get_event_by_id":
+                slug = tc["input"].strip().strip("\"'")
+                url  = get_event_url(slug)
+                if url:
+                    event_url  = url
+                    event_name = _get_event_title(slug) or slug
+                break
+
+    # Fallback: if agent called maps_url_tool but didn't emit maps_event_id in JSON.
+    if location_url is None and calendar is None and booking is None:
+        for tc in tool_calls:
+            if tc["tool"] == "maps_url_tool":
+                slug = tc["input"].strip().strip("\"'")
+                url  = get_maps_url(slug)
+                if url:
+                    data           = create_calendar_data(slug)
+                    location_url   = url
+                    location_name  = _get_event_title(slug) or slug
+                    location_venue = (data["venue"] if data else None) or None
+                break
+
     return ChatResponse(
         content=content,
         keywords=keywords,
@@ -502,15 +545,15 @@ def _get_live_event() -> dict | None:
             "text": "The festival is not live yet. Anything you want to figure out in advance?",
         }
 
-    # During festival, general drop-in window (12:00–18:00)
-    if GENERAL_START <= now_time <= GENERAL_END:
-        return {
-            "type": "drop_in",
-            "text": "Most of the drop-in events are live now! Anything you are interested in?",
-        }
-
-    # During festival, outside general hours → look for events starting within 15–60 min
+    # During festival — search for an upcoming event first (works inside and outside
+    # the general drop-in window). Only fall back to the generic drop_in card when
+    # no specific upcoming event is found within the 30–60 min window.
     if not _EVENTS_DB.exists():
+        if GENERAL_START <= now_time <= GENERAL_END:
+            return {
+                "type": "drop_in",
+                "text": "Most of the drop-in events are live now! Anything you are interested in?",
+            }
         return None
 
     window_start = (_dt.now(london) + _td(minutes=30)).strftime("%H:%M")
@@ -558,6 +601,12 @@ def _get_live_event() -> dict | None:
     conn.close()
 
     if not row:
+        # No specific upcoming event — fall back to generic drop_in during open hours
+        if GENERAL_START <= now_time <= GENERAL_END:
+            return {
+                "type": "drop_in",
+                "text": "Most of the drop-in events are live now! Anything you are interested in?",
+            }
         return None
 
     t_start = row.get("time_start") or (row["time"] or "").replace("–", "-").split("-")[0].strip()
